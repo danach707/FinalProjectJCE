@@ -1,0 +1,2 @@
+MATCH = 0
+NO_MATCH = -1

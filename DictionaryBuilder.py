@@ -1,5 +1,4 @@
 import StringCombinations as sc
-import Lists
 
 
 class DictionaryBuilder:
@@ -9,17 +8,10 @@ class DictionaryBuilder:
         self.numbersList = numbersList
         self.wordMaxLen = wordMaxLen
         self.wordMinLen = wordMinLen
-
+        self.fileName = "dictionary.txt"
 
     def buildDictionary(self):
-        permotatedDict = sc.combinations([self.wordList, self.numbersList], self.wordMaxLen, self.wordMinLen)
-        print("from DB: ", permotatedDict)
-        return permotatedDict
+        sc.combinations([self.wordList, self.numbersList], self.wordMaxLen, self.wordMinLen, self.fileName)
+        return self.fileName
 
 
-if __name__ == "__main__":
-    dictionary = DictionaryBuilder(Lists.words, Lists.numbers, 1000, 6)
-    dictionary.buildDictionary()
-
-    with open("dictionary.txt", "r") as dict:
-        print(dict.read())
