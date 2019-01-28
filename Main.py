@@ -7,11 +7,13 @@ if __name__ == "__main__":
     #dict = dictionary.buildDictionary()
 
     password = input('password: ')
-    mistakes = Search.search(password, "dictionary.txt")
+    result = Search.search(password, "dictionary.txt")
+    mistakes = result[0]
+    passFromDict = result[1]
     if mistakes == 0:
         print('Your password found in the dictionary!')
     elif mistakes > 0:
-        print('Your password found in the dictionary, but with %d mistakes.' % mistakes)
+        print('Your password found in the dictionary, but with %d mistakes.\nRelated password is: %s' % (mistakes, passFromDict))
     else:
         print('Your password did not found in the dictionary.')
 

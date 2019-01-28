@@ -5,29 +5,28 @@ import EnumMatches as matches
 def search(word, file):
 
     min_mistakes = sys.maxsize
+    similar_pass = ''
     with open(file, 'r') as f:
-        for line in f.readlines():
-            line = line.rstrip()
-            if line == word:
-                return matches.MATCH
-            if len(line) == len(word) and getchars(line.lower()) == getchars(word.lower()):
-                mistakes = countMistakes(line)
+        for wordFromFile in f.readlines():
+            wordFromFile = wordFromFile.rstrip()
+            if wordFromFile == word:
+                return matches.MATCH, wordFromFile
+            if len(wordFromFile) == len(word) and getchars(wordFromFile.lower()) == getchars(word.lower()):
+                mistakes = countMistakes(wordFromFile, word)
                 if min_mistakes > mistakes:
                     min_mistakes = mistakes
-                    print(line)
+                    similar_pass = wordFromFile
 
     if min_mistakes != sys.maxsize:
-        return min_mistakes
-    return matches.NO_MATCH
+        return min_mistakes, similar_pass
+    return matches.NO_MATCH, similar_pass
 
 
-def countMistakes(word):
-    word_lower = word.lower()
+def countMistakes(word1, word2):
     mistakes = 0
-    for index in range(0, len(word)):
-        if word[index] != word_lower[index]:
-            print(word[index], word_lower[index])
-            mistakes += 1
+    for index in range(len(word1)):
+        if word1[index] != word2[index]:
+            mistakes = mistakes + 1
     return mistakes
 
 
