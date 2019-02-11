@@ -2,37 +2,49 @@ import sys
 import EnumMatches as matches
 
 
-def search(word, file):
+class Search:
 
-    min_mistakes = sys.maxsize
-    similar_pass = ''
-    with open(file, 'r') as f:
-        for wordFromFile in f.readlines():
-            wordFromFile = wordFromFile.rstrip()
-            if wordFromFile == word:
-                return matches.MATCH, wordFromFile
-            if len(wordFromFile) == len(word) and getchars(wordFromFile.lower()) == getchars(word.lower()):
-                mistakes = countMistakes(wordFromFile, word)
-                if min_mistakes > mistakes:
-                    min_mistakes = mistakes
-                    similar_pass = wordFromFile
+    def __init__(self):
+        self.match = matches.NO_MATCH
+        self.similar_pass = ""
+        self.min_mistakes = 0
 
-    if min_mistakes != sys.maxsize:
-        return min_mistakes, similar_pass
-    return matches.NO_MATCH, similar_pass
+    def search(self, word, file):
+        if word is None:
+            self.match = matches.ERROR
+            self.similar_pass = ""
 
+        min_mistakes = sys.maxsize
+        with open(file, 'r') as f:
+            for wordFromFile in f.readlines():
+                wordFromFile = wordFromFile.rstrip()
 
-def countMistakes(word1, word2):
-    mistakes = 0
-    for index in range(len(word1)):
-        if word1[index] != word2[index]:
-            mistakes = mistakes + 1
-    return mistakes
+                if wordFromFile == word:
+                    self.match = matches.MATCH
+                    self.similar_pass = wordFromFile
 
+                if len(wordFromFile) == len(word) and self.getchars(wordFromFile.lower()) == self.getchars(word.lower()):
+                    mistakes = self.countMistakes(wordFromFile, word)
+                    if min_mistakes > mistakes:
+                        min_mistakes = mistakes
+                        self.similar_pass = wordFromFile
 
-def getchars(word):
-    chars = ''
-    for char in word:
-        if char.isalpha():
-            chars += char
-    return chars
+        if min_mistakes != sys.maxsize:
+            self.min_mistakes = min_mistakes
+            self.match = matches.MATCH
+        else:
+            self.match = matches.NO_MATCH
+
+    def countMistakes(self, word1, word2):
+        mistakes = 0
+        for index in range(len(word1)):
+            if word1[index] != word2[index]:
+                mistakes = mistakes + 1
+        return mistakes
+
+    def getchars(self, word):
+        chars = ''
+        for char in word:
+            if char.isalpha():
+                chars += char
+        return chars

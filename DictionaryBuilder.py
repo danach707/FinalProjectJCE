@@ -12,6 +12,5 @@ class DictionaryBuilder:
 
     def buildDictionary(self):
         sc.combinations([self.wordList, self.numbersList], self.wordMaxLen, self.wordMinLen, self.fileName)
-        return self.fileName
 
 

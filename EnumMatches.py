@@ -1,2 +1,3 @@
-MATCH = 0
-NO_MATCH = -1
+MATCH = "Match!"
+NO_MATCH = "No Match"
+ERROR = "Error"
