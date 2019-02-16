@@ -1,5 +1,6 @@
 import sys
-import EnumMatches as matches
+import Enums as matches
+from pathlib import Path
 
 
 class Search:
@@ -13,6 +14,12 @@ class Search:
         if word is None:
             self.match = matches.ERROR
             self.similar_pass = ""
+            return
+
+        if not Path(file).is_file():
+            self.match = matches.ERROR
+            self.similar_pass = ""
+            return
 
         min_mistakes = sys.maxsize
         with open(file, 'r') as f:
@@ -22,6 +29,7 @@ class Search:
                 if wordFromFile == word:
                     self.match = matches.MATCH
                     self.similar_pass = wordFromFile
+                    return
 
                 if len(wordFromFile) == len(word) and self.getchars(wordFromFile.lower()) == self.getchars(word.lower()):
                     mistakes = self.countMistakes(wordFromFile, word)
