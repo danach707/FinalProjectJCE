@@ -1,12 +1,13 @@
-import tkinter as tk
-from tkinter import *
 import DictionaryBuilder as db
+import tkinter as tk
+from tkinter.ttk import *
 import Lists
 import Search as search
 import re
 import Enums
+import Themes
 
-# fins a way to design
+
 class MainScreen():
 
     def __init__(self):
@@ -14,6 +15,9 @@ class MainScreen():
         self.root.title("Personal Password Dictionary")
         self.root.geometry("600x450")
         self.root.resizable(0, 0)
+        #style
+        self.style = Themes.Themes()
+        self.style.set_app_light_theme()
         # frame search
         self.frame_search = Frame(self.root)
         self.frame_search.grid(row=2)
@@ -24,7 +28,7 @@ class MainScreen():
         self.frame_navbar = Frame(self.root)
         self.frame_navbar.grid(row=1)
 
-        self.dictionary = db.DictionaryBuilder(Lists.words, Lists.numbers, Enums.WORD_MAX_LEN, Enums.WORD_MIN_LEN)
+        self.dictionary = db.DictionaryBuilder(Enums.WORD_MAX_LEN, Enums.WORD_MIN_LEN)
         self.search = search.Search()
 
     def createScreen(self):
@@ -39,7 +43,7 @@ class MainScreen():
         # ================================dictionary============================
 
         # ============================questionirre==============================
-        self.lbl_questionirre = tk.Label(self.frame_questionirre, text="Questionirre:", fg="#6699ff", font="Tahoma").grid(row=0)
+        self.lbl_questionirre = tk.Label(self.frame_questionirre, text="Questionirre:").grid(row=0)
         # first name
         self.etr_fname = tk.Entry(self.frame_questionirre)
         self.etr_fname.grid(row=1, column=1)
@@ -101,34 +105,34 @@ class MainScreen():
 
     def submitQuestionirre(self):
         if self.etr_fname.get() != '':
-            Lists.words.append(self.etr_fname.get())
+            self.dictionary.wordList.append(self.etr_fname.get())
         if self.etr_lname.get() != '':
-            Lists.words.append(self.etr_lname.get())
+            self.dictionary.wordList.append(self.etr_lname.get())
         if self.etr_dob.get() != '':
             parse = [x.strip() for x in self.etr_dob.get().split('/')]
-            Lists.numbers.extend(parse)
-            Lists.words.append(self.etr_dob.get())
+            self.dictionary.numbersList.extend(parse)
+            self.dictionary.wordList.append(self.etr_dob.get())
         if self.etr_workplace.get() != '':
             workplaces = [x.strip() for x in self.etr_workplace.get().split(',')]
-            Lists.words.extend(workplaces)
+            self.dictionary.wordList.extend(workplaces)
         if self.etr_job.get() != '':
             jobs = [x.strip() for x in self.etr_job.get().split(',')]
-            Lists.words.extend(jobs)
+            self.dictionary.wordList.extend(jobs)
         if self.etr_family.get() != '':
             members = [x.strip() for x in self.etr_family.get().split(',')]
-            Lists.words.extend(members)
+            self.dictionary.wordList.extend(members)
         if self.etr_college.get() != '':
             colleges = [x.strip() for x in self.etr_college.get().split(',')]
-            Lists.words.extend(colleges)
+            self.dictionary.wordList.extend(colleges)
         if self.etr_school.get() != '':
             schools = [x.strip() for x in self.etr_school.get().split(',')]
-            Lists.words.extend(schools)
+            self.dictionary.wordList.extend(schools)
         if self.etr_email.get() != '':
             self.parseEmail()
 
-        self.dictionary = db.DictionaryBuilder(Lists.words, Lists.numbers, Enums.WORD_MAX_LEN, Enums.WORD_MIN_LEN)
+        # self.dictionary = db.DictionaryBuilder(self.dictionary.wordList, self.dictionary.numbersList, Enums.WORD_MAX_LEN, Enums.WORD_MIN_LEN)
         self.dictionary.buildDictionary()
-
+        self.dictionary.cleanLists()
 
     def goto_questionirre(self):
         self.frame_search.grid_remove()
@@ -142,10 +146,10 @@ class MainScreen():
         prefix = self.etr_email.get().split("@")
         match = re.findall(r'([a-zA-Z]+)', prefix[0])
         if match:
-            Lists.words.extend(match)
+            self.dictionary.wordList.extend(match)
         match = re.findall(r'([0-9]+)', prefix[0])
         if match:
-            Lists.numbers.extend(match)
+            self.dictionary.numbersList.extend(match)
 
 
 if __name__ == '__main__':

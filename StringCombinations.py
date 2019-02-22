@@ -2,6 +2,10 @@ import Lists
 
 
 def combinations(p_list, wordMaxLen, wordMinLen, filename):
+    if len(p_list[0]) == 0:
+       p_list[0] = p_list[1]
+    if len(p_list[1]) == 0:
+        p_list[1] = p_list[0]
     # Words before numbers:
     itr1 = concatenateTwoListsCells(p_list, wordMaxLen, wordMinLen, filename)
     # itr1 before special characters:
@@ -16,7 +20,6 @@ def combinations(p_list, wordMaxLen, wordMinLen, filename):
     concatenateTwoListsCells([itr11, Lists.spec_characters], wordMaxLen, wordMinLen, filename)
     # special characters after itr12:
     concatenateTwoListsCells([itr12, Lists.spec_characters], wordMaxLen, wordMinLen, filename)
-
 
 def getSpecialCamelCase(word):
     word.lower()
