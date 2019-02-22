@@ -8,3 +8,6 @@ In this project I built an application that creates a dictionary of likely passw
 ## Contact info: <br>
 Dana Cohen <br>
 Danach707@gmail.com
+
+## User Manual 
+Download PPD.exe from dist folder.
