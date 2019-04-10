@@ -8,7 +8,7 @@ import Enums
 import Themes
 
 
-class MainScreen():
+class MainScreen:
 
     def __init__(self):
         self.root = tk.Tk()
