@@ -1,25 +1,30 @@
-import Lists
 
 
 def combinations(p_list, wordMaxLen, wordMinLen, filename):
-    if len(p_list[0]) == 0:
-       p_list[0] = p_list[1]
-    if len(p_list[1]) == 0:
-        p_list[1] = p_list[0]
+
+    if p_list is None:
+        return
+
+    words = [p_list.words, p_list.numbers]
+    if len(words[0]) == 0:
+        words[0] = words[1]
+    if len(words[1]) == 0:
+        words[1] = words[0]
+
     # Words before numbers:
-    itr1 = concatenateTwoListsCells(p_list, wordMaxLen, wordMinLen, filename)
+    itr1 = concatenateTwoListsCells(words, wordMaxLen, wordMinLen, filename)
     # itr1 before special characters:
-    itr11 = concatenateTwoListsCells([itr1, Lists.spec_characters], wordMaxLen, wordMinLen, filename)
+    itr11 = concatenateTwoListsCells([itr1, p_list.spec_characters], wordMaxLen, wordMinLen, filename)
     # special characters before itr1:
-    itr12 = concatenateTwoListsCells([Lists.spec_characters, itr1], wordMaxLen, wordMinLen, filename)
+    itr12 = concatenateTwoListsCells([p_list.spec_characters, itr1], wordMaxLen, wordMinLen, filename)
     # special characters before itr11:
-    concatenateTwoListsCells([Lists.spec_characters, itr11], wordMaxLen, wordMinLen, filename)
+    concatenateTwoListsCells([p_list.spec_characters, itr11], wordMaxLen, wordMinLen, filename)
     # special characters before itr12:
-    concatenateTwoListsCells([Lists.spec_characters, itr12], wordMaxLen, wordMinLen, filename)
+    concatenateTwoListsCells([p_list.spec_characters, itr12], wordMaxLen, wordMinLen, filename)
     # special characters after itr11:
-    concatenateTwoListsCells([itr11, Lists.spec_characters], wordMaxLen, wordMinLen, filename)
+    concatenateTwoListsCells([itr11, p_list.spec_characters], wordMaxLen, wordMinLen, filename)
     # special characters after itr12:
-    concatenateTwoListsCells([itr12, Lists.spec_characters], wordMaxLen, wordMinLen, filename)
+    concatenateTwoListsCells([itr12, p_list.spec_characters], wordMaxLen, wordMinLen, filename)
 
 def getSpecialCamelCase(word):
     word.lower()

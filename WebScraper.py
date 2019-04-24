@@ -2,6 +2,7 @@ import os
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
+import kivy
 
 
 class Webscraper:
@@ -13,5 +14,3 @@ class Webscraper:
         options.add_argument("--mute-audio")
         # options.add_argument("headless")
         self.driver = webdriver.Chrome(executable_path='./driver/chromedriver.exe', options=options)
-
-
