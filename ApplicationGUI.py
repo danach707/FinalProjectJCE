@@ -3,9 +3,10 @@ from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.stacklayout import StackLayout
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.slider import Slider
 from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
 from kivy.factory import Factory
 from kivy.properties import ObjectProperty
@@ -62,17 +63,21 @@ class MyDictionary(App):
 
         # ============== create a dictionary ==============
 
-        lay_dict = BoxLayout(orientation='vertical')
-        btn_calc_dict = Button(text='Make me a dictionary!', size_hint=(0.8, 0.1))
-        lbl_calc = Label(text='', size_hint=(1, .9))
-        btn_calc_dict.bind(on_press=partial(self.calc_dictionary, dictionary, lbl_calc))
+        lay_dict = BoxLayout(orientation='vertical', padding=[100, 100], spacing=10)
+        btn_calc_dict = Button(text='Make me a dictionary!', size_hint=(.5, .1))
+        lbl_calc = Label(text='', size_hint=(1, .5))
+        btn_calc_dict.bind(on_press=partial(self.calc_dictionary, dictionary))
+        btn_open_quest = Button(text='Questionnaire', size_hint=(.5, .1))
+        btn_open_quest.bind(on_press=partial(self.questionnaire, dictionary))
 
+        lay_dict.add_widget(btn_open_quest)
         lay_dict.add_widget(btn_calc_dict)
         lay_dict.add_widget(lbl_calc)
 
-        # bind nav bar functions
-        btn_nav_search.bind(on_press=partial(self.navigate, lay_container, lay_dict, lay_search))
-        btn_nav_create_dict.bind(on_press=partial(self.navigate, lay_container, lay_search, lay_dict))
+        # =============================================
+        # bind nav bar function
+        btn_nav_search.bind(on_press=partial(self.navigate, lay_container, lay_search, lay_dict))
+        btn_nav_create_dict.bind(on_press=partial(self.navigate, lay_container, lay_dict, lay_search))
 
         # add widgets to the root layout
         root.add_widget(lay_nav)
@@ -88,33 +93,107 @@ class MyDictionary(App):
             lbl_res.text = 'Dictionary file not found. You can create one with the application!'
         etr_pass.text = ''
 
-    def calc_dictionary(self, dictionary, lbl_calc, instance):
+    def calc_dictionary(self, dictionary, instance):
         dictionary.buildDictionary()
         dictionary.lists.cleanLists()
-        lbl_calc.text = 'Finished!'
+        print('Finished!')
 
     # nav function
-    def navigate(self, layout, lay_from, lay_to, instance):
-        layout.remove_widget(lay_from)
-        layout.add_widget(lay_to)
+    def navigate(self, layout, lay_to, *lay_from):
+        if lay_from is not None:
+            for lay in lay_from:
+                layout.remove_widget(lay)
+        if lay_to is not None:
+            layout.add_widget(lay_to)
 
+    def questionnaire(self, dictionary, instance):
 
-    # # save dictionary popup
-    #
-    # def dismiss_popup(self):
-    #     self._popup.dismiss()
-    #
-    # def show_save(self):
-    #     content = SaveDialog(save=self.save, cancel=self.dismiss_popup)
-    #     self._popup = Popup(title="Save file", content=content,
-    #                         size_hint=(0.9, 0.9))
-    #     self._popup.open()
-    #
-    # def save(self, path, filename):
-    #     with open(os.path.join(path, filename), 'w') as stream:
-    #         stream.write(';')
-    #
-    #     self.dismiss_popup()
+        # ============== questionnaire form ==============
+        lay_quest = BoxLayout(orientation='horizontal')
+
+        popup = Popup(title="Questionnaire", content=lay_quest, size=(400, 400), size_hint=(None, None))
+
+        lay_quest_lbls = BoxLayout(orientation='vertical')
+        lay_quest_lbls.add_widget(Label(text='First name:'))
+        lay_quest_lbls.add_widget(Label(text='Last name:'))
+        lay_quest_lbls.add_widget(Label(text='Date of birth:'))
+        lay_quest_lbls.add_widget(Label(text='Phone number:'))
+        lay_quest_lbls.add_widget(Label(text='Work place'))
+        lay_quest_lbls.add_widget(Label(text='Family members:'))
+        lay_quest_lbls.add_widget(Label(text='College:'))
+        lay_quest_lbls.add_widget(Label(text='School:'))
+        lay_quest_lbls.add_widget(Label(text='Email:'))
+
+        lay_quest_fields = BoxLayout(orientation='vertical')
+
+        self.qst_fname = TextInput(text='', size_hint=(.7, .05), multiline=False,
+                              on_text_validate=partial(self.calc_dictionary, self.directory))
+        self.qst_lname = TextInput(text='', size_hint=(.7, .05), multiline=False,
+                              on_text_validate=partial(self.calc_dictionary, self.directory))
+        self.qst_dateofbirth = TextInput(text='', size_hint=(.7, .05), multiline=False,
+                              on_text_validate=partial(self.calc_dictionary, self.directory))
+        self.qst_phone_number = TextInput(text='', size_hint=(.7, .05), multiline=False,
+                              on_text_validate=partial(self.calc_dictionary, self.directory))
+        self.qst_workplace = TextInput(text='', size_hint=(.7, .05), multiline=False,
+                              on_text_validate=partial(self.calc_dictionary, self.directory))
+        # add a button to add a member
+        self.qst_family_members = TextInput(text='', size_hint=(.7, .05), multiline=False,
+                              on_text_validate=partial(self.calc_dictionary, self.directory))
+        self.qst_college = TextInput(text='', size_hint=(.7, .05), multiline=False,
+                              on_text_validate=partial(self.calc_dictionary, self.directory))
+        self.qst_school = TextInput(text='', size_hint=(.7, .05), multiline=False,
+                              on_text_validate=partial(self.calc_dictionary, self.directory))
+        self.qst_email = TextInput(text='', size_hint=(.7, .05), multiline=False,
+                              on_text_validate=partial(self.calc_dictionary, self.directory))
+        lay_quest_fields.add_widget(self.qst_fname)
+        lay_quest_fields.add_widget(self.qst_lname)
+        lay_quest_fields.add_widget(self.qst_dateofbirth)
+        lay_quest_fields.add_widget(self.qst_phone_number)
+        lay_quest_fields.add_widget(self.qst_workplace)
+        lay_quest_fields.add_widget(self.qst_family_members)
+        lay_quest_fields.add_widget(self.qst_college)
+        lay_quest_fields.add_widget(self.qst_school)
+        lay_quest_fields.add_widget(self.qst_email)
+
+        lay_quest_btns = StackLayout(orientation='bt-lr', spacing=10)
+        btn_ok_quest = Button(text='Submit',
+                              size_hint=(.5, .1),
+                              on_press=partial(self.on_dismiss_quest, dictionary))
+        btn_cancel_quest = Button(text='Cancel',
+                                  size_hint=(.5, .1),
+                                  on_press=lambda *x: popup.dismiss())
+        lay_quest_btns.add_widget(btn_cancel_quest)
+        lay_quest_btns.add_widget(btn_ok_quest)
+
+        lay_quest.add_widget(lay_quest_lbls)
+        lay_quest.add_widget(lay_quest_fields)
+        lay_quest.add_widget(lay_quest_btns)
+
+        popup.open()
+
+    def on_dismiss_quest(self, dictionary, instance):
+
+        if self.qst_fname.text != '':
+            dictionary.lists.words.append(self.qst_fname.text)
+        if self.qst_lname.text != '':
+            dictionary.lists.words.append(self.qst_lname.text)
+        if self.qst_workplace.text != '':
+            dictionary.lists.words.append(self.qst_workplace.text)
+        if self.qst_family_members.text != '':
+            dictionary.lists.words.append(self.qst_family_members.text)
+        if self.qst_college.text != '':
+            dictionary.lists.words.append(self.qst_college.text)
+        if self.qst_school.text != '':
+            dictionary.lists.words.append(self.qst_school.text)
+        if self.qst_email.text != '':
+            dictionary.lists.words.append(self.qst_email.text)
+
+        if self.qst_dateofbirth.text != '':
+            dictionary.lists.numbers.append(self.qst_dateofbirth.text)
+        if self.qst_phone_number.text != '':
+            dictionary.lists.numbers.append(self.qst_phone_number.text)
+        print(dictionary.lists.numbers)
+        print(dictionary.lists.words)
 
 
 if __name__ == '__main__':

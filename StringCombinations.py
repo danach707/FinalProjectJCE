@@ -7,9 +7,11 @@ def combinations(p_list, wordMaxLen, wordMinLen, filename):
 
     words = [p_list.words, p_list.numbers]
     if len(words[0]) == 0:
-        words[0] = words[1]
-    if len(words[1]) == 0:
-        words[1] = words[0]
+        words.pop(0)
+    elif len(words[1]) == 0:
+        words.pop(1)
+
+    print(words)
 
     # Words before numbers:
     itr1 = concatenateTwoListsCells(words, wordMaxLen, wordMinLen, filename)
