@@ -2,6 +2,7 @@ import WebScraper as ws
 import Lists as l
 from selenium.common import exceptions as seleniumExceptions
 
+
 class FacebookScraper(ws.Webscraper):
 
     def __init__(self, email, password, username):

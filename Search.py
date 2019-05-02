@@ -1,25 +1,22 @@
 import sys
-import Enums as matches
+import Enums as errors
 from pathlib import Path
 
 
 class Search:
 
     def __init__(self):
-        self.match = matches.NO_MATCH
         self.similar_pass = ""
         self.min_mistakes = 0
 
     def search(self, word, file):
         if word is None:
-            self.match = matches.ERROR
             self.similar_pass = ""
-            return
+            return errors.Error_Empty_Password
 
         if not Path(file).is_file():
-            self.match = matches.ERROR
             self.similar_pass = ""
-            return
+            return errors.Error_No_Dictionary
 
         min_mistakes = sys.maxsize
         with open(file, 'r') as f:
@@ -27,28 +24,28 @@ class Search:
                 wordFromFile = wordFromFile.rstrip()
 
                 if wordFromFile == word:
-                    self.match = matches.MATCH
                     self.similar_pass = wordFromFile
-                    return
+                    return self.calculate_mistakes_percentage(word)
 
-                if len(wordFromFile) == len(word) and self.getchars(wordFromFile.lower()) == self.getchars(word.lower()):
-                    mistakes = self.countMistakes(wordFromFile, word)
+                if len(wordFromFile) == len(word) and self.normalize_input(wordFromFile) == self.normalize_input(word):
+                    mistakes = self.count_mistakes(wordFromFile, word)
                     if min_mistakes > mistakes:
                         min_mistakes = mistakes
                         self.similar_pass = wordFromFile
 
         if min_mistakes != sys.maxsize:
             self.min_mistakes = min_mistakes
-            self.match = matches.MATCH
-        else:
-            self.match = matches.NO_MATCH
+            return self.calculate_mistakes_percentage(word)
 
-    def countMistakes(self, word1, word2):
+    def count_mistakes(self, word1, word2):
         mistakes = 0
         for index in range(len(word1)):
             if word1[index] != word2[index]:
                 mistakes = mistakes + 1
         return mistakes
+
+    def normalize_input(self, word):
+        return self.getchars(word.lower())
 
     def getchars(self, word):
         chars = ''
@@ -56,3 +53,9 @@ class Search:
             if char.isalpha():
                 chars += char
         return chars
+    """
+    Calculate how close was the password entered to a password in the dictionary in percentages.
+    return an identical percentage 
+    """
+    def calculate_mistakes_percentage(self, password):
+        return 100 - (len(password)*self.min_mistakes)/100

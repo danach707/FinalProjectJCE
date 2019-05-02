@@ -15,7 +15,7 @@ from functools import partial
 import DictionaryBuilder as db
 import Search
 import re
-import Enums
+import Enums as e
 
 
 # class SaveDialog(FloatLayout):
@@ -86,11 +86,22 @@ class MyDictionary(App):
 
     def handleSearch(self, lbl_res, etr_pass, dict, instance):
         s = Search.Search()
-        if os.path.isfile(dict.fileName):
-            result = s.search(etr_pass.text, dict.fileName)
-            lbl_res.text = result
+        res = s.search(etr_pass.text, dict.fileName)
+        if res == e.Error_No_Dictionary:
+            lbl_res.text = "Error, no dictionary found.\n" \
+                            "You can create one with the application!"
+        elif res == e.Error_Empty_Password:
+            lbl_res.text = "Password is empty.."
+        elif s.min_mistakes == 0:
+            lbl_res.text = 'Found a match!\n' \
+                           'Your password can be hacked with this dictionary.\n' \
+                           'We recommend you to change it to something less guessable.\n'
         else:
-            lbl_res.text = 'Dictionary file not found. You can create one with the application!'
+            # change # to %
+            lbl_res.text = 'Found a partial match!\n' \
+                           'Your password is closed by {0} to a password in our dictionary.\n' \
+                           'Number of different characters: {1}\n' \
+                           'Password found in the dictionary: {2}\n'.format(res, s.min_mistakes, s.similar_pass)
         etr_pass.text = ''
 
     def calc_dictionary(self, dictionary, instance):

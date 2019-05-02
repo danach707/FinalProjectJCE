@@ -11,6 +11,3 @@ class DictionaryBuilder:
 
     def buildDictionary(self):
         sc.combinations(self.lists, self.wordMaxLen, self.wordMinLen, self.fileName)
-
-
-
