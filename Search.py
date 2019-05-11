@@ -25,7 +25,8 @@ class Search:
 
                 if wordFromFile == word:
                     self.similar_pass = wordFromFile
-                    return self.calculate_mistakes_percentage(word)
+                    self.min_mistakes = 0
+                    return errors.Password_Found
 
                 if len(wordFromFile) == len(word) and self.normalize_input(wordFromFile) == self.normalize_input(word):
                     mistakes = self.count_mistakes(wordFromFile, word)
@@ -35,7 +36,9 @@ class Search:
 
         if min_mistakes != sys.maxsize:
             self.min_mistakes = min_mistakes
-            return self.calculate_mistakes_percentage(word)
+            return errors.Password_Found
+        else:
+            return errors.Password_Not_Found
 
     def count_mistakes(self, word1, word2):
         mistakes = 0

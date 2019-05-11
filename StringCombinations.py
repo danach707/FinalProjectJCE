@@ -1,4 +1,5 @@
-
+import re
+import Enums as modes
 
 def combinations(p_list, wordMaxLen, wordMinLen, filename):
 
@@ -49,3 +50,23 @@ def concatenateTwoListsCells(clist, wordMaxLen, wordMinLen, filename):
                         dict.write(newWord+"\n")
                         rlist.append(newWord)
     return rlist
+
+
+def parse_email(email, mode):
+    prefix = email.split("@")[0]
+    regex = ''
+    if mode == modes.Mode_Words:
+        regex = r'([a-zA-Z]+)'
+    elif mode == modes.Mode_Numbers:
+        regex = r'([0-9]+)'
+    res = []
+
+    match = re.findall(regex, prefix)
+    for i in match:
+        res.append(i)
+    return res
+
+
+def parse_dob(dob):
+    return re.compile(r'\W').split(dob)
+
