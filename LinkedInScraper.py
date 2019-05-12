@@ -1,7 +1,7 @@
 import WebScraper as ws
 import Lists as l
 from selenium.common import exceptions as seleniumExceptions
-import StringCombinations as s
+import StringOperations as s
 import Enums as e
 import traceback
 import re
@@ -53,7 +53,7 @@ class LinkedinScraper(ws.Webscraper):
         # =============== first and last name ===============
         try:
             name = self.driver.find_element_by_css_selector(".pv-top-card-section__name").get_attribute('innerHTML')
-            name = self.clean_result(name)
+            name = s.clean_data(name)
             self.lists.words.extend(name)
         except seleniumExceptions.NoSuchElementException:
             print("No name element in the web page")
@@ -63,7 +63,7 @@ class LinkedinScraper(ws.Webscraper):
         # =============== current job ===============
         try:
             current_job = self.driver.find_element_by_css_selector(".pv-top-card-v2-section__company-name").get_attribute('innerHTML')
-            current_job = self.clean_result(current_job)
+            current_job = s.clean_data(current_job)
             self.lists.words.extend(current_job)
         except seleniumExceptions.NoSuchElementException:
             print("No job element in the web page")
@@ -73,7 +73,7 @@ class LinkedinScraper(ws.Webscraper):
         # =============== location of the job or where the user lives ===============
         try:
             location = self.driver.find_element_by_css_selector(".pv-top-card-section__location").get_attribute('innerHTML')
-            location = self.clean_result(location)
+            location = s.clean_data(location)
             self.lists.words.extend(location)
         except seleniumExceptions.NoSuchElementException:
             print("No location element in the web page")
@@ -83,7 +83,7 @@ class LinkedinScraper(ws.Webscraper):
         # =============== college ===============
         try:
             college = self.driver.find_element_by_css_selector(".pv-top-card-v2-section__school-name").get_attribute('innerHTML')
-            college = self.clean_result(college)
+            college = s.clean_data(college)
             self.lists.words.extend(college)
         except seleniumExceptions.NoSuchElementException:
             print("No college element in the web page")
@@ -102,7 +102,7 @@ class LinkedinScraper(ws.Webscraper):
             self.driver.get('https://www.linkedin.com/in/%s/detail/contact-info/' % self.username)
             email = self.driver.find_element_by_xpath(
                 "//section[contains(@class,'ci-email')]/div/a").get_attribute('innerHTML')
-            email = self.clean_result(email)
+            email = s.clean_data(email)
             self.lists.words.extend(s.parse_email(''.join(email), e.Mode_Words))
             self.lists.numbers.extend(s.parse_email(''.join(email), e.Mode_Numbers))
 
@@ -115,7 +115,7 @@ class LinkedinScraper(ws.Webscraper):
         try:
             dob = self.driver.find_element_by_xpath(
                 "//section[contains(@class,'ci-birthday')]/div/span").get_attribute('innerHTML')
-            dob = self.clean_result(dob)
+            dob = s.clean_data(dob)
             self.lists.numbers.extend(self.handle_dob(dob))
         except seleniumExceptions.NoSuchElementException:
             print("No date of birth element in the web page")
@@ -126,25 +126,12 @@ class LinkedinScraper(ws.Webscraper):
         try:
             phone = self.driver.find_element_by_xpath(
                 "//section[contains(@class,'ci-phone')]/ul/li/span[contains(@class, 't-black']").get_attribute('innerHTML')
-            dob = self.clean_result(phone)
+            phone = s.clean_data(phone)
             self.lists.numbers.extend(phone)
         except seleniumExceptions.NoSuchElementException:
             print("No phone element in the web page")
         except Exception:
             traceback.print_exc()
-
-
-
-
-    """ gets the data from the attribute and returns a list of the words to the dictionary."""
-    def clean_result(self, data):
-        # delete new lines and spaces:
-        data = data.strip()
-        data = re.split(r"\n| |,", data)
-        # filter none relevant elements:
-        data = list(filter(self.data_clean_regex.search, data))
-        print("in clean result:", data)
-        return data
 
     """ gets the linkedin URL and returns the username """
     def get_username(self, url):
@@ -165,7 +152,7 @@ class LinkedinScraper(ws.Webscraper):
 
         for month_num, month in enumerate(e.months, start=1):
             if month == month_word:
-                return [month_num, day]
+                return [str(month_num), day]
         return [day]
 
 
