@@ -1,2 +1,0 @@
-LIGHT_BLUE = "#6699ff"
-LIGHT_PURPLE = "#e6e6ff"
