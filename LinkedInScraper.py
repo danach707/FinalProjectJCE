@@ -4,7 +4,7 @@ from selenium.common import exceptions as seleniumExceptions
 import StringOperations as s
 import Enums as e
 import traceback
-import re
+
 
 class LinkedinScraper(ws.Webscraper):
 
@@ -12,7 +12,6 @@ class LinkedinScraper(ws.Webscraper):
         ws.Webscraper.__init__(self)
         self.loggedin = self.login(email, password)
         self.lists = l.Lists()
-        # self.regex = re.compile()
 
     """ login function to linkedIn """
     def login(self, email, password):
@@ -40,8 +39,6 @@ class LinkedinScraper(ws.Webscraper):
         except:
             print("Cannot log in to LinkedIn.. maybe you entered wrong credentials?")
         return False
-
-
 
     """ scrap function. gets the user linkedin URL and scrap the information about this user """
     def scrap(self, profile_url):
@@ -90,13 +87,6 @@ class LinkedinScraper(ws.Webscraper):
         except Exception:
             traceback.print_exc()
 
-        # =============== former experience ===============
-        # try: # he doesnt like me here....
-        #     experience = self.driver.find_elements_by_id("experience-section")
-        #     experience = self.clean_result(experience)
-        # except seleniumExceptions.NoSuchElementException:
-        #     print("No experience element in the web page")
-
         # =============== Email ===============
         try:
             self.driver.get('https://www.linkedin.com/in/%s/detail/contact-info/' % self.username)
@@ -132,13 +122,6 @@ class LinkedinScraper(ws.Webscraper):
             print("No phone element in the web page")
         except Exception:
             traceback.print_exc()
-
-    """ gets the linkedin URL and returns the username """
-    def get_username(self, url):
-        l = url.split('/')
-        if l[-1] == '':
-            del l[-1]
-        return l[-1]
 
     """ the the date of birth in format 'month day' and returns the matching numbers """
     def handle_dob(self, dob):

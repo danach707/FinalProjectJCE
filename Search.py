@@ -28,7 +28,7 @@ class Search:
                     self.min_mistakes = 0
                     return errors.Password_Found
 
-                if len(wordFromFile) == len(word) and self.normalize_input(wordFromFile) == self.normalize_input(word):
+                if len(wordFromFile) == len(word):                      #and self.normalize_input(wordFromFile) == self.normalize_input(word):
                     mistakes = self.count_mistakes(wordFromFile, word)
                     if min_mistakes > mistakes:
                         min_mistakes = mistakes

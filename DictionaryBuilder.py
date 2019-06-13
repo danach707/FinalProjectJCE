@@ -12,20 +12,22 @@ class DictionaryBuilder:
         self.fileName = "dictionary.txt"
 
     """ Builds the dictionary according to the length boundary it gets."""
-    def buildDictionary(self, word_min_len, word_max_len):
+    def buildDictionary(self, word_min_len, word_max_len, filename, progressbar):
 
         global wmax, wmin
         if word_max_len is None or not word_max_len.isdigit():
             wmax = self.default_max_len
         else:
-            wmax = word_max_len
+            wmax = int(word_max_len)
 
         if word_min_len is None or not word_min_len.isdigit():
             wmin = self.default_min_len
         else:
-            wmin = word_min_len
+            wmin = int(word_min_len)
 
-        sc.combinations(self.lists, wmax, wmin, self.fileName)
+        if filename is not None and filename != '':
+            self.fileName = filename+'.txt'
+        sc.combinations(self.lists, wmax, wmin, self.fileName, progressbar)
 
     """ Removes duplicates from the lists and make word list values lowercase"""
     def clean_lists(self, mode):

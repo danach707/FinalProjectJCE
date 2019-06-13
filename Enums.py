@@ -7,6 +7,9 @@ Mode_Numbers = 'numbers'
 WORD_MAX_LEN = 1000
 WORD_MIN_LEN = 6
 
+LinkedIn_Search = 1
+Facebook_Search = 2
+
 months = ['January',
          'February',
          'March',
