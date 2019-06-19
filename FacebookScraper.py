@@ -57,6 +57,29 @@ class FacebookScraper(ws.Webscraper):
         except Exception:
             traceback.print_exc()
 
+        # =============== family members =============== #
+
+            # try:
+            #     self.wait_random()
+            #     self.driver.get(profile_url + '/about?section=all_relationships')
+            #     self.wait_random()
+            #     family_members = self.driver.find_elements_by_xpath('//*[@id="pagelet_eduwork"]/div/div/ul[1]')
+            #     print('fam:', family_members)
+            #
+            #     i = 1
+            #     print(family_members)
+            #     for member in family_members:
+            #         xpath = ".//li[{0}]/div/div/div/div/div[2]/div/a".format(i)
+            #         wp = member.find_element_by_xpath(xpath).get_attribute('innerHTML')
+            #         wp = s.clean_data(wp)
+            #         self.lists.words.extend(wp)
+            #         i += 1
+            #
+            # except seleniumExceptions.NoSuchElementException:
+            #     print("No workplace element in the web page")
+            # except Exception:
+            #     traceback.print_exc()
+
         # =============== work places ===============
         try:
             self.wait_random()
@@ -79,18 +102,6 @@ class FacebookScraper(ws.Webscraper):
         except Exception:
             traceback.print_exc()
 
-        # =============== family members =============== # try to get all li and for each li take a.innerHTML
-        # try:
-        #     self.driver.get(profile_url+'/about?section=overview')
-        #     family_members = self.driver.find_element_by_xpath("//div[@data-overviewsection='all_relationships']/div/div/div/div/ul/li").get_attribute(
-        #         'innerHTML')
-        #     workplace = s.clean_data(family_members)
-        #     self.lists.words.extend(workplace)
-        # except seleniumExceptions.NoSuchElementException:
-        #     print("No family members element in the web page")
-        #     traceback.print_exc()
-        # except Exception:
-        #     traceback.print_exc()
 
     def clean_url(self, profile_url):
         if profile_url[-1] == '/':

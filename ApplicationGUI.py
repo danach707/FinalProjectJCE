@@ -3,21 +3,26 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 from kivy.graphics import Rectangle
 from kivy.uix.slider import Slider
+from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.progressbar import ProgressBar
 from functools import partial
 import DictionaryBuilder as db
 import Search
 import LinkedInScraper as ls
+import FacebookScraper as fs
 import Enums as e
 from kivy.config import Config
+from kivy.clock import Clock
 
 import Questionnaire_Handler as qh
 import Dictionary_Handler as dh
 import List_Box_Handler as lbh
+import FIleExplorer as fe
 
 images_dir = './Images'
 
@@ -31,6 +36,7 @@ class MyDictionary(App):
 
         dictionary = db.DictionaryBuilder()
         self.qhandler = qh.Questionnaire_Handler()
+        self.dictionaryhandler = dh.DictionaryHandler()
 
         # ============== root layout ==============
         root = BoxLayout(orientation='vertical', size=(800, 800))
@@ -70,33 +76,45 @@ class MyDictionary(App):
 
         # ============== search the password in the dictionary ==============
         lay_search = BoxLayout(orientation='vertical', padding=[10, 10], spacing=10)
+        lay_search_load = BoxLayout(orientation='horizontal', spacing=10, size_hint=(1, .15))
+        lay_search_btn_filename = BoxLayout(orientation='horizontal', spacing=10, size_hint=(1, .1))
 
-        lbl_search_header = Label(text='[b][size=15]Enter your password and we will check if it is in the dictionary builded for you.[/size]'
+        lbl_search_header = Label(text='[b][size=15][color=4d4d4d]Enter your password and we will check if it is in the dictionary builded for you.[/size]'
                                        '\nDont worry! We do not store your passwords or using them in any way.[/b]',
                                   size_hint=(1, .2),
                                   markup=True,
-                                  color=(0, 0, 0, 1)
                                   )
 
         inp_pass = TextInput(text='',
-                             size_hint=(.6, .15),
+                             size_hint=(.6, 1),
                              hint_text='Your password here',
                              font_size=15,
                              password=True,
                              padding_y=15
                              )
 
-        btn_search = Button(text='[b]Search[/b]',
-                            size_hint=(.5, .1),
+        btn_load_file = Button(text='[b][color=4d4d4d]Load file[/b]',
+                            size_hint=(.2, 1),
                             markup=True,
-                            color=(0, 0, 0, 1),
+                            background_normal='{0}/fbli_search_button.png'.format(images_dir),
+                            background_down='{0}/fbli_search_button_back.png'.format(images_dir)
+                            )
+        btn_search = Button(text='[b][color=4d4d4d]Search[/b]',
+                            size_hint=(1, 1),
+                            markup=True,
                             background_normal='{0}/fbli_search_button.png'.format(images_dir),
                             background_down='{0}/fbli_search_button_back.png'.format(images_dir)
                             )
 
+        self.lbl_search_filename = Label(text='',
+                                size_hint=(1, 1),
+                                color=(77, 77, 77),
+                                markup=True
+                                )
+
         lbl_pass_result = Label(text='',
                                 size_hint=(1, .8),
-                                color=(0, 0, 0, 1)
+                                markup=True
                                 )
         with lbl_pass_result.canvas:
             self.pass_result_rect = Rectangle(
@@ -106,16 +124,24 @@ class MyDictionary(App):
                                     keep_ratio=True,
                                     source='{0}/search_answer.png'.format(images_dir)
                                     )
-        lbl_pass_result.bind(pos=self.update_pass_result_rect, size=self.update_pass_result_rect)
+        lbl_pass_result.bind(pos=self.update_pass_result_rect,
+                             size=self.update_pass_result_rect)
 
-        pb_search = ProgressBar(max=100, size_hint=(1, .1))
+        self.pb_search = ProgressBar(max=100, size_hint=(1, .1))
 
-        btn_search.bind(on_press=partial(self.handle_search, lbl_pass_result, inp_pass, dictionary, pb_search))
+        btn_search.bind(on_press=partial(self.handle_search, lbl_pass_result, inp_pass))
+        btn_load_file.bind(on_press=self.load_file)
+
+        lay_search_load.add_widget(inp_pass)
+        lay_search_load.add_widget(btn_load_file)
+
+        lay_search_btn_filename.add_widget(btn_search)
+        lay_search_btn_filename.add_widget(self.lbl_search_filename)
 
         lay_search.add_widget(lbl_search_header)
-        lay_search.add_widget(inp_pass)
-        lay_search.add_widget(btn_search)
-        lay_search.add_widget(pb_search)
+        lay_search.add_widget(lay_search_load)
+        lay_search.add_widget(lay_search_btn_filename)
+        lay_search.add_widget(self.pb_search)
         lay_search.add_widget(lbl_pass_result)
 
         # ============== create a dictionary ==============
@@ -138,7 +164,7 @@ class MyDictionary(App):
         lay_dict_list.bind(pos=self.update_wordlist_rect, size=self.update_wordlist_rect)
 
         # list:
-        lay_dict_list.add_widget(Label(text='[b]Current list:[/b]',
+        lay_dict_list.add_widget(Label(text='[b][color=4d4d4d]Current list:[/b]',
                                        size_hint=(1, .1),
                                        markup=True,
                                        font_size=18
@@ -155,30 +181,27 @@ class MyDictionary(App):
         lay_dict_list.add_widget(btn_clean_list)
 
         # buttons:
-        btn_calc_dict = Button(text='[b]Make me a dictionary![/b]',
+        btn_calc_dict = Button(text='[b][color=4d4d4d]Make me a dictionary![/b]',
                                size_hint=(1, .2),
                                markup=True,
                                font_size=20,
-                               color=(0, 0, 0, 1),
                                background_normal='{0}/make_me_dictionary.png'.format(images_dir),
                                background_down='{0}/make_me_dictionary_back.png'.format(images_dir)
                                )
-        btn_calc_dict.bind(on_press=partial(dh.popup_dictionary, dictionary))
+        btn_calc_dict.bind(on_press=partial(self.dictionaryhandler.popup_dictionary, dictionary))
 
-        btn_open_quest = Button(text='[b]Questionnaire[/b]',
+        btn_open_quest = Button(text='[b][color=4d4d4d]Questionnaire[/b]',
                                 size_hint=(1, .1),
                                 markup=True,
                                 font_size=15,
-                                color=(0, 0, 0, 1),
                                 background_normal='{0}/questionnaire_button.png'.format(images_dir),
                                 background_down='{0}/questionnaire_button_back.png'.format(images_dir))
         btn_open_quest.bind(on_press=partial(self.qhandler.questionnaire, dictionary, lbl_list_box))
 
-        btn_linkedin_search = Button(text='[b]LinkedIn Search[/b]',
+        btn_linkedin_search = Button(text='[b][color=4d4d4d]LinkedIn Search[/b]',
                                      size_hint=(1, .1),
                                      markup=True,
                                      font_size=15,
-                                     color=(0, 0, 0, 1),
                                      background_normal='{0}/li_search_button.png'.format(images_dir),
                                      background_down='{0}/li_search_button_back.png'.format(images_dir))
 
@@ -189,11 +212,10 @@ class MyDictionary(App):
                                                   "Example: https://www.linkedin.com/in/<PROFILE NAME>/",
                                                   e.LinkedIn_Search))
 
-        btn_facebook_search = Button(text='[b]Facebook Search[/b]',
+        btn_facebook_search = Button(text='[b][color=4d4d4d]Facebook Search[/b]',
                                      size_hint=(1, .1),
                                      markup=True,
                                      font_size=15,
-                                     color=(0, 0, 0, 1),
                                      background_normal='{0}/fb_search_button.png'.format(images_dir),
                                      background_down='{0}/fb_search_button_back.png'.format(images_dir))
         btn_facebook_search.bind(on_press=partial(self.web_scrap,
@@ -223,6 +245,20 @@ class MyDictionary(App):
         root.add_widget(lay_container)
         return root
 
+    # ==================== load file =============================
+
+    def load_file(self, instance):
+
+        content = fe.FileExplorer()
+        popup_load_file = Popup(title="Load file",
+                                content=content,
+                                size_hint=(0.9, 0.9),
+                                on_dismiss=partial(self.update_lbl_filename, content))
+        popup_load_file.open()
+
+    def update_lbl_filename(self, content, instance):
+        self.lbl_search_filename.text = content.update_lbl_filename.split('\\')[-1]
+
     # ======================= update rects =======================
 
     def update_root_rect(self, instance, value):
@@ -243,33 +279,49 @@ class MyDictionary(App):
         dictionary.lists.cleanLists()
         lbh.printto_lbllist(None, lbl_list_box)
 
-    def handle_search(self, lbl_res, etr_pass, dict, pb, instance):    #add the progress bar
-        s = Search.Search()
-        password = etr_pass.text
+    def handle_search(self, lbl_res, etr_pass, instance):
 
-        res = s.search(password, dict.fileName)
-        pb.value = 50
-        if res == e.Error_No_Dictionary:
-            lbl_res.text = "Error, no dictionary found.\n" \
-                            "You can create one with the application!"
+        password = etr_pass.text
+        s = Search.Search(password, self.lbl_search_filename.text, self.update_search_progressbar)
+        update_bar = Clock.create_trigger(self.update_search_progressbar)
+        self.num_lines_in_file = self.get_number_of_lines_in_file(self.lbl_search_filename.text)
+
+        res = s.search()
+
+        if res == e.Error_No_Dictionary or self.num_lines_in_file == -1:
+            lbl_res.text = "[color=#000000][b][size=20]Error, no dictionary found.\n" \
+                            "You can create one with the application![/b]"
         elif res == e.Error_Empty_Password:
-            lbl_res.text = "Password is empty.."
+            lbl_res.text = "[color=#000000][b][size=20]Password is empty..[/b]"
         elif res == e.Password_Not_Found:
-            lbl_res.text = 'Password is not in the dictionary.'
+            lbl_res.text = '[color=#29a329][b][size=20]Password is not in the dictionary.[/b]'
         elif res == e.Password_Found and s.min_mistakes == 0:
-            lbl_res.text = 'Found a match!\n' \
+            lbl_res.text = '[color=#ff1a1a][b][size=20]Found a match!\n' \
                            'Your password can be hacked with this dictionary.\n' \
-                           'We recommend you to change it to something less guessable.\n'
+                           'We recommend you to change it to something less guessable.[/b]\n'
         elif res == e.Password_Found and s.min_mistakes != 0:
-            lbl_res.text = 'Found a partial match!\n' \
-                           'Your password is closed by {0} to a password in our dictionary.\n' \
+            lbl_res.text = '[color=#ff9900][b][size=20]Found a partial match!\n' \
+                           'Your password is closed by {0}% to a password in our dictionary.\n' \
                            'Number of different characters: {1}\n' \
-                           'Password found in the dictionary: {2}\n'.format(s.calculate_mistakes_percentage(password),
+                           'Password found in the dictionary: {2}[/b]\n'.format(s.calculate_mistakes_percentage(password),
                                                                             s.min_mistakes,
                                                                             s.similar_pass)
-        pb.value = 100
         etr_pass.text = ''
-        # pb.value = 0
+
+    def update_search_progressbar(self, val):
+        if val is None:
+            self.pb_search.value += (1/self.num_lines_in_file)
+        else:
+            self.pb_search.value = val
+
+    def get_number_of_lines_in_file(self, path):
+        res = 0
+        if path == '':
+            return -1
+        with open(path, 'r') as file:
+            for line in file:
+                res += 1
+        return res
 
     def handle_questionnaire(self, dictionary, lbl_list_box, instance):
         self.qhandler.questionnaire(dictionary, lbl_list_box, instance)
@@ -294,16 +346,15 @@ class MyDictionary(App):
             password = f.readline()
 
         if website == e.LinkedIn_Search:
-            linkedin_scraper = ls.LinkedinScraper(email, password)
-            linkedin_scraper.scrap(self.etr_url.text)
-
-            dictionary.extend_dictionary(linkedin_scraper.lists.words, e.Mode_Words)
-            dictionary.extend_dictionary(linkedin_scraper.lists.numbers, e.Mode_Numbers)
-            lbh.printto_lbllist(dictionary.lists.words + dictionary.lists.numbers, lbl_list)
-            popup.dismiss()
+            self.scraper = ls.LinkedinScraper(email, password)
         elif website == e.Facebook_Search:
-            # facebook_scraper = fs
-            pass
+            self.scraper = fs.FacebookScraper('dana.c.0.o@gmail.com', 'Admatay!08121994')
+
+        self.scraper.scrap(self.etr_url.text)
+        dictionary.extend_dictionary(self.scraper.lists.words, e.Mode_Words)
+        dictionary.extend_dictionary(self.scraper.lists.numbers, e.Mode_Numbers)
+        lbh.printto_lbllist(dictionary.lists.words + dictionary.lists.numbers, lbl_list)
+        popup.dismiss()
 
     def web_scrap(self, dictionary, lbl_list, text_to_show, website, instance):
 
