@@ -2,119 +2,125 @@ import re
 import Enums as modes
 
 
-def combinations(p_list, wordMaxLen, wordMinLen, filename, progressbar):
-    """ creates combinations of words based on the Lists objects receives. Adds the words to the dictionary"""
-
-    if p_list is None:
-        return
-
-    p_list.words = init_list(p_list.words, wordMaxLen, wordMinLen, filename)
-    progressbar.value = 80
-
-    # (1): Words before numbers: (aaa111)
-    words_before_numbers = concatenate_two_lists_cells(p_list.words, p_list.numbers, wordMaxLen, wordMinLen, filename)
-    progressbar.value = 120
-
-    # (2): numbers with numbers: (111222)
-    numbers_with_numbers = concatenate_two_lists_cells(p_list.numbers, p_list.numbers, wordMaxLen, wordMinLen, filename)
-    progressbar.value = 300
-
-    # (3): words with words: (aaabbb)
-    words_with_words = concatenate_two_lists_cells(p_list.words, p_list.words, wordMaxLen, wordMinLen, filename)
-    progressbar.value = 380
-
-    # (4): (3) with numbers: (aaabbb111)
-    www_with_numbers = concatenate_two_lists_cells(words_with_words, p_list.numbers, wordMaxLen, wordMinLen, filename)
-    progressbar.value = 460
-
-    # (5): (1) before special characters: (aaa111@)
-    one_before_spec = concatenate_two_lists_cells(words_before_numbers, p_list.spec_characters, wordMaxLen, wordMinLen, filename)
-    progressbar.value = 540
-
-    # (6): (4) with special characters: (aaabbb111@)
-    concatenate_two_lists_cells(www_with_numbers, p_list.spec_characters, wordMaxLen, wordMinLen, filename)
-    progressbar.value = 660
-
-    # (7): (5) with numbers: (aaa111@111)
-    concatenate_two_lists_cells(one_before_spec, p_list.numbers, wordMaxLen, wordMinLen, filename)
-    progressbar.value = 740
-
-    # (8): (5) with words: (aaa111@aaa)
-    concatenate_two_lists_cells(one_before_spec, p_list.words, wordMaxLen, wordMinLen, filename)
-    progressbar.value = 860
-
-    # (9): words with (2): (aaa111222)
-    words_with_three = concatenate_two_lists_cells(p_list.words, numbers_with_numbers, wordMaxLen, wordMinLen, filename)
-    progressbar.value = 940
-
-    # (10): (9) with special characters: (aaa111222@)
-    concatenate_two_lists_cells(words_with_three, p_list.spec_characters, wordMaxLen, wordMinLen, filename)
-    progressbar.value = 960
-
-    # (11): (5) with special characters: (aaabbb@)
-    concatenate_two_lists_cells(words_with_words, p_list.spec_characters, wordMaxLen, wordMinLen, filename)
-    progressbar.value = 1000
-
-
-def get_special_camel_case(word):
-    """ receives a word from the dictionary and returns a list containing the word in lowercase, uppercase, and camel case"""
-    words = []
-
-    word = word.upper()
-    words.append(word)
-
-    word = word.lower()
-    words.append(word)
-
-    # camel case to each letter in the word:
-    for i in range(len(word)):
-        word = word.lower()
-        word = word[:i].lower() + word[i:].capitalize()
+class Combinations:
+    def __init__(self, p_list, wordMaxLen, wordMinLen, filename, progressbar):
+        self.p_list = p_list
+        self.wordMaxLen = wordMaxLen
+        self.wordMinLen = wordMinLen
+        self.filename = filename
+        self.progressbar = progressbar
+        
+    def combinations(self):
+        """ Creates combinations of words based on the Lists objects receives. Adds the words to the dictionary """
+    
+        if self.p_list is None:
+            return
+    
+        self.p_list.words = self.init_list(self.p_list.words)
+        self.progressbar()
+    
+        # (1): Words before numbers: (aaa111)
+        words_before_numbers = self.concatenate_two_lists_cells(self.p_list.words, self.p_list.numbers)
+        self.progressbar()
+    
+        # (2): numbers with numbers: (111222)
+        numbers_with_numbers = self.concatenate_two_lists_cells(self.p_list.numbers, self.p_list.numbers)
+        self.progressbar()
+    
+        # (3): words with words: (aaabbb)
+        words_with_words = self.concatenate_two_lists_cells(self.p_list.words, self.p_list.words)
+        self.progressbar()
+    
+        # (4): (3) with numbers: (aaabbb111)
+        www_with_numbers = self.concatenate_two_lists_cells(words_with_words, self.p_list.numbers)
+        self.progressbar()
+    
+        # (5): (1) before special characters: (aaa111@)
+        one_before_spec = self.concatenate_two_lists_cells(words_before_numbers, self.p_list.spec_characters)
+        self.progressbar()
+    
+        # (6): (4) with special characters: (aaabbb111@)
+        self.concatenate_two_lists_cells(www_with_numbers, self.p_list.spec_characters)
+        self.progressbar()
+    
+        # (7): (5) with numbers: (aaa111@111)
+        self.concatenate_two_lists_cells(one_before_spec, self.p_list.numbers)
+        self.progressbar()
+    
+        # (8): (5) with words: (aaa111@aaa)
+        self.concatenate_two_lists_cells(one_before_spec, self.p_list.words)
+        self.progressbar()
+    
+        # (9): words with (2): (aaa111222)
+        words_with_three = self.concatenate_two_lists_cells(self.p_list.words, numbers_with_numbers)
+        self.progressbar()
+    
+        # (10): (9) with special characters: (aaa111222@)
+        self.concatenate_two_lists_cells(words_with_three, self.p_list.spec_characters)
+        self.progressbar()
+    
+        # (11): (5) with special characters: (aaabbb@)
+        self.concatenate_two_lists_cells(words_with_words, self.p_list.spec_characters)
+        self.progressbar()
+        
+    def get_special_camel_case(self, word):
+        """ receives a word from the dictionary and returns a list containing the word in lowercase, uppercase, and camel case"""
+        words = []
+    
+        word = word.upper()
         words.append(word)
-
-    return words
-
-
-def init_list(list, wordMaxLen, wordMinLen, filename):
-    rlist = []
-    for index in range(len(list)):
-        if wordMinLen <= len(list[index]) <= wordMaxLen:
-            new_words = get_special_camel_case(list[index])
-            rlist.extend(new_words)
-        else:
-            del list[index]
-
-    list.extend(rlist)
-    write_words_to_dictionary(list, filename)
-    return list
-
-
-def concatenate_two_lists_cells(list_before, list_after, wordMaxLen, wordMinLen, filename):
-    """ gets two lists and concatenate each cell in the list_before to a cell in the list_after.
-        the function returns a list of the concatenated words."""
-
-    rlist = []
-
-    if len(list_before) == 0 or len(list_after) == 0:
+    
+        word = word.lower()
+        words.append(word)
+    
+        # camel case to each letter in the word:
+        for i in range(len(word)):
+            word = word.lower()
+            word = word[:i].lower() + word[i:].capitalize()
+            words.append(word)
+    
+        return words  
+    
+    def init_list(self, list):
+        rlist = []
+        for index in range(len(list)):
+            print(list)
+            print(rlist)
+            if self.wordMinLen <= len(list[index]) <= self.wordMaxLen:
+                new_words = self.get_special_camel_case(list[index])
+                rlist.extend(new_words)
+        rlist.extend(list)
+    
+        self.write_words_to_dictionary(rlist)
+        return rlist  
+    
+    def concatenate_two_lists_cells(self, list_before, list_after):
+        """ gets two lists and concatenate each cell in the list_before to a cell in the list_after.
+            the function returns a list of the concatenated words."""
+    
+        rlist = []
+    
+        if len(list_before) == 0 or len(list_after) == 0:
+            return rlist
+    
+        for index_before_list in range(len(list_before)):
+            for index_after_list in range(len(list_after)):
+                new_word = list_before[index_before_list] + list_after[index_after_list]
+                if self.wordMinLen <= len(new_word) <= self.wordMaxLen:
+                    new_words_camel_case = self.get_special_camel_case(new_word)
+                    rlist.append(new_word)
+                    rlist.extend(new_words_camel_case)
+    
+        self.write_words_to_dictionary(rlist)
         return rlist
+     
+    def write_words_to_dictionary(self, words):
+        """ writes a list of words to the self.filename specified"""
+        with open(self.filename, "a") as dict:
+            for word in words:
+                dict.write(word + "\n")
 
-    for index_before_list in range(len(list_before)):
-        for index_after_list in range(len(list_after)):
-            new_word = list_before[index_before_list] + list_after[index_after_list]
-            if wordMinLen <= len(new_word) <= wordMaxLen:
-                new_words_camel_case = get_special_camel_case(new_word)
-                rlist.append(new_word)
-                rlist.extend(new_words_camel_case)
-
-    write_words_to_dictionary(rlist, filename)
-    return rlist
-
-
-def write_words_to_dictionary(words, filename):
-    """ writes a list of words to the filename specified"""
-    with open(filename, "a") as dict:
-        for word in words:
-            dict.write(word + "\n")
+    # ============================== More Functions ================================
 
 
 def parse_email(email, mode):

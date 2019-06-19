@@ -5,40 +5,46 @@ from pathlib import Path
 
 class Search:
 
-    def __init__(self):
+    def __init__(self, word, file, progressbar):
         self.similar_pass = ""
         self.min_mistakes = 0
+        self.word = word
+        self.file = file
+        self.progressbar = progressbar
 
-    def search(self, word, file):
-        if word is None:
+    def search(self):
+        if self.word is None:
             self.similar_pass = ""
             return errors.Error_Empty_Password
 
-        if not Path(file).is_file():
+        if self.file == '' or not Path(self.file).is_file():
             self.similar_pass = ""
             return errors.Error_No_Dictionary
 
         min_mistakes = sys.maxsize
-        with open(file, 'r') as f:
+        with open(self.file, 'r') as f:
             for wordFromFile in f.readlines():
                 wordFromFile = wordFromFile.rstrip()
 
-                if wordFromFile == word:
+                if wordFromFile == self.word:
                     self.similar_pass = wordFromFile
                     self.min_mistakes = 0
+                    self.progressbar(100)
                     return errors.Password_Found
 
-                if len(wordFromFile) == len(word):                      #and self.normalize_input(wordFromFile) == self.normalize_input(word):
-                    mistakes = self.count_mistakes(wordFromFile, word)
+                if len(wordFromFile) == len(self.word):                                                         #and self.normalize_input(wordFromFile) == self.normalize_input(word):
+                    mistakes = self.count_mistakes(wordFromFile, self.word)
                     if min_mistakes > mistakes:
                         min_mistakes = mistakes
                         self.similar_pass = wordFromFile
+            self.progressbar(None)
 
         if min_mistakes != sys.maxsize:
             self.min_mistakes = min_mistakes
             return errors.Password_Found
         else:
             return errors.Password_Not_Found
+
 
     def count_mistakes(self, word1, word2):
         mistakes = 0
@@ -56,9 +62,9 @@ class Search:
             if char.isalpha():
                 chars += char
         return chars
-    """
-    Calculate how close was the password entered to a password in the dictionary in percentages.
-    return an identical percentage 
-    """
+
     def calculate_mistakes_percentage(self, password):
-        return 100 - (len(password)*self.min_mistakes)/100
+        """Calculate how close was the password entered to a password in the dictionary in percentages.
+        return an identical percentage
+        """
+        return 100 - ((self.min_mistakes/len(password))*100)

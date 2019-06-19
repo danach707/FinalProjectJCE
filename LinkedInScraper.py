@@ -49,7 +49,7 @@ class LinkedinScraper(ws.Webscraper):
 
         # =============== first and last name ===============
         try:
-            name = self.driver.find_element_by_css_selector(".pv-top-card-section__name").get_attribute('innerHTML')
+            name = self.driver.find_element_by_xpath("//ul[contains(@class,'pv-top-card-v3--list')]/li").get_attribute('innerHTML')
             name = s.clean_data(name)
             self.lists.words.extend(name)
         except seleniumExceptions.NoSuchElementException:
@@ -59,7 +59,7 @@ class LinkedinScraper(ws.Webscraper):
 
         # =============== current job ===============
         try:
-            current_job = self.driver.find_element_by_css_selector(".pv-top-card-v2-section__company-name").get_attribute('innerHTML')
+            current_job = self.driver.find_element_by_xpath("//div[contains(@class,'display-flex')]/div[contains(@class,'flex-1')]/h2").get_attribute('innerHTML')
             current_job = s.clean_data(current_job)
             self.lists.words.extend(current_job)
         except seleniumExceptions.NoSuchElementException:
@@ -67,9 +67,19 @@ class LinkedinScraper(ws.Webscraper):
         except Exception:
             traceback.print_exc()
 
+        # =============== country ===============
+        try:
+            current_job = self.driver.find_element_by_xpath("//div[contains(@class, 'display-flex')]/div[contains(@class, 'flex-1')]/ul[2]/li").get_attribute('innerHTML')
+            current_job = s.clean_data(current_job)
+            self.lists.words.extend(current_job)
+        except seleniumExceptions.NoSuchElementException:
+            print("No country element in the web page")
+        except Exception:
+            traceback.print_exc()
+
         # =============== location of the job or where the user lives ===============
         try:
-            location = self.driver.find_element_by_css_selector(".pv-top-card-section__location").get_attribute('innerHTML')
+            location = self.driver.find_element_by_xpath("//li[contains(@class,'pv-top-card-v3--experience-list-item')][1]/span").get_attribute('innerHTML')
             location = s.clean_data(location)
             self.lists.words.extend(location)
         except seleniumExceptions.NoSuchElementException:
@@ -79,7 +89,7 @@ class LinkedinScraper(ws.Webscraper):
 
         # =============== college ===============
         try:
-            college = self.driver.find_element_by_css_selector(".pv-top-card-v2-section__school-name").get_attribute('innerHTML')
+            college = self.driver.find_element_by_xpath("//li[contains(@class,'pv-top-card-v3--experience-list-item')][2]/span").get_attribute('innerHTML')
             college = s.clean_data(college)
             self.lists.words.extend(college)
         except seleniumExceptions.NoSuchElementException:
@@ -115,7 +125,7 @@ class LinkedinScraper(ws.Webscraper):
         # =============== phone number ===============
         try:
             phone = self.driver.find_element_by_xpath(
-                "//section[contains(@class,'ci-phone')]/ul/li/span[contains(@class, 't-black']").get_attribute('innerHTML')
+                "//section[contains(@class,'ci-phone')]/ul/li/span").get_attribute('innerHTML')
             phone = s.clean_data(phone)
             self.lists.numbers.extend(phone)
         except seleniumExceptions.NoSuchElementException:
@@ -123,12 +133,22 @@ class LinkedinScraper(ws.Webscraper):
         except Exception:
             traceback.print_exc()
 
-    """ the the date of birth in format 'month day' and returns the matching numbers """
-    def handle_dob(self, dob):
-
+        # ================= address ===================
         try:
-            month_word = dob[0]
-            day = dob[1]
+            phone = self.driver.find_element_by_xpath(
+                "//section[contains(@class,'ci-address')]/ul/li/span[contains(@class, 't-black']").get_attribute('innerHTML')
+            phone = s.clean_data(phone)
+            self.lists.numbers.extend(phone)
+        except seleniumExceptions.NoSuchElementException:
+            print("No address element in the web page")
+        except Exception:
+            traceback.print_exc()
+
+    def handle_dob(self, dob):
+        """ the the date of birth in format 'month day' and returns the matching numbers """
+        try:
+            month_word = dob[1]
+            day = dob[0]
         except IndexError:
             print("Error parsing date of birth")
             return []
