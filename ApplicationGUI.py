@@ -348,7 +348,7 @@ class MyDictionary(App):
         if website == e.LinkedIn_Search:
             self.scraper = ls.LinkedinScraper(email, password)
         elif website == e.Facebook_Search:
-            self.scraper = fs.FacebookScraper('dana.c.0.o@gmail.com', 'Admatay!08121994')
+            self.scraper = fs.FacebookScraper()
 
         self.scraper.scrap(self.etr_url.text)
         dictionary.extend_dictionary(self.scraper.lists.words, e.Mode_Words)
