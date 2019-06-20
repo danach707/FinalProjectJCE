@@ -3,12 +3,9 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.textinput import TextInput
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import ObjectProperty
 from kivy.uix.popup import Popup
 from kivy.graphics import Rectangle
-from kivy.uix.slider import Slider
-from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.progressbar import ProgressBar
 from functools import partial
 import DictionaryBuilder as db
