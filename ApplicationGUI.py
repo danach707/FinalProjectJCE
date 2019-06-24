@@ -1,3 +1,5 @@
+import kivy
+kivy.require('1.9.0')
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.button import Button
@@ -9,15 +11,14 @@ from kivy.graphics import Rectangle
 from kivy.uix.progressbar import ProgressBar
 from functools import partial
 import DictionaryBuilder as db
-import Search
 import LinkedInScraper as ls
 import FacebookScraper as fs
 import Enums as e
 from kivy.config import Config
-from kivy.clock import Clock
 
 import Questionnaire_Handler as qh
 import Dictionary_Handler as dh
+import Search_Handler as sh
 import List_Box_Handler as lbh
 import FIleExplorer as fe
 
@@ -34,6 +35,7 @@ class MyDictionary(App):
         dictionary = db.DictionaryBuilder()
         self.qhandler = qh.Questionnaire_Handler()
         self.dictionaryhandler = dh.DictionaryHandler()
+        self.searchhandler = sh.SearchHandler()
 
         # ============== root layout ==============
         root = BoxLayout(orientation='vertical', size=(800, 800))
@@ -105,7 +107,7 @@ class MyDictionary(App):
 
         self.lbl_search_filename = Label(text='',
                                 size_hint=(1, 1),
-                                color=(77, 77, 77),
+                                color=(77, 77, 77, 1),
                                 markup=True
                                 )
 
@@ -124,10 +126,15 @@ class MyDictionary(App):
         lbl_pass_result.bind(pos=self.update_pass_result_rect,
                              size=self.update_pass_result_rect)
 
-        self.pb_search = ProgressBar(max=100, size_hint=(1, .1))
+        self.pb_search = ProgressBar(size_hint=(1, .1))
 
-        btn_search.bind(on_press=partial(self.handle_search, lbl_pass_result, inp_pass))
-        btn_load_file.bind(on_press=self.load_file)
+        btn_search.bind(on_press=partial(self.handle_search,
+                                         inp_pass,
+                                         self.pb_search,
+                                         lbl_pass_result,
+                                         self.lbl_search_filename
+                                         ))
+        btn_load_file.bind(on_press=partial(self.searchhandler.load_file, self.lbl_search_filename))
 
         lay_search_load.add_widget(inp_pass)
         lay_search_load.add_widget(btn_load_file)
@@ -167,7 +174,8 @@ class MyDictionary(App):
                                        font_size=18
                                        ))
         lbl_list_box = Label(text='No Words in the list',
-                             size_hint=(1, 1)
+                             size_hint=(1, 1),
+                             color=(0, 0, 0, 1)
                              )
         btn_clean_list = Button(text='Clean List',
                                 size_hint=(1, .1),
@@ -242,20 +250,6 @@ class MyDictionary(App):
         root.add_widget(lay_container)
         return root
 
-    # ==================== load file =============================
-
-    def load_file(self, instance):
-
-        content = fe.FileExplorer()
-        popup_load_file = Popup(title="Load file",
-                                content=content,
-                                size_hint=(0.9, 0.9),
-                                on_dismiss=partial(self.update_lbl_filename, content))
-        popup_load_file.open()
-
-    def update_lbl_filename(self, content, instance):
-        self.lbl_search_filename.text = content.update_lbl_filename.split('\\')[-1]
-
     # ======================= update rects =======================
 
     def update_root_rect(self, instance, value):
@@ -276,49 +270,9 @@ class MyDictionary(App):
         dictionary.lists.cleanLists()
         lbh.printto_lbllist(None, lbl_list_box)
 
-    def handle_search(self, lbl_res, etr_pass, instance):
-
-        password = etr_pass.text
-        s = Search.Search(password, self.lbl_search_filename.text, self.update_search_progressbar)
-        update_bar = Clock.create_trigger(self.update_search_progressbar)
-        self.num_lines_in_file = self.get_number_of_lines_in_file(self.lbl_search_filename.text)
-
-        res = s.search()
-
-        if res == e.Error_No_Dictionary or self.num_lines_in_file == -1:
-            lbl_res.text = "[color=#000000][b][size=20]Error, no dictionary found.\n" \
-                            "You can create one with the application![/b]"
-        elif res == e.Error_Empty_Password:
-            lbl_res.text = "[color=#000000][b][size=20]Password is empty..[/b]"
-        elif res == e.Password_Not_Found:
-            lbl_res.text = '[color=#29a329][b][size=20]Password is not in the dictionary.[/b]'
-        elif res == e.Password_Found and s.min_mistakes == 0:
-            lbl_res.text = '[color=#ff1a1a][b][size=20]Found a match!\n' \
-                           'Your password can be hacked with this dictionary.\n' \
-                           'We recommend you to change it to something less guessable.[/b]\n'
-        elif res == e.Password_Found and s.min_mistakes != 0:
-            lbl_res.text = '[color=#ff9900][b][size=20]Found a partial match!\n' \
-                           'Your password is closed by {0}% to a password in our dictionary.\n' \
-                           'Number of different characters: {1}\n' \
-                           'Password found in the dictionary: {2}[/b]\n'.format(s.calculate_mistakes_percentage(password),
-                                                                            s.min_mistakes,
-                                                                            s.similar_pass)
-        etr_pass.text = ''
-
-    def update_search_progressbar(self, val):
-        if val is None:
-            self.pb_search.value += (1/self.num_lines_in_file)
-        else:
-            self.pb_search.value = val
-
-    def get_number_of_lines_in_file(self, path):
-        res = 0
-        if path == '':
-            return -1
-        with open(path, 'r') as file:
-            for line in file:
-                res += 1
-        return res
+    def handle_search(self, inp_password, progressbar, pass_result, lbl_search_filename, instance):
+        self.searchhandler.set_vars(inp_password, progressbar, pass_result, lbl_search_filename)
+        self.searchhandler.start_search()
 
     def handle_questionnaire(self, dictionary, lbl_list_box, instance):
         self.qhandler.questionnaire(dictionary, lbl_list_box, instance)
@@ -336,21 +290,55 @@ class MyDictionary(App):
         if lay_to is not None:
             layout.add_widget(lay_to)
 
-    def scrap_and_add(self, dictionary, lbl_list, website, popup, instance):
+    def set_scrapers(self, dictionary, lbl_list, website, popup, instance):
 
         with open('creds.txt') as f:
-            email = f.readline()
-            password = f.readline()
+            lemail = f.readline()
+            lpassword = f.readline()
 
         if website == e.LinkedIn_Search:
-            self.scraper = ls.LinkedinScraper(email, password)
-        elif website == e.Facebook_Search:
-            self.scraper = fs.FacebookScraper()
+            self.scraper = ls.LinkedinScraper(lemail, lpassword)
+            self.scraper.scrap(self.etr_url.text)
+            dictionary.extend_dictionary(self.scraper.lists.words, e.Mode_Words)
+            dictionary.extend_dictionary(self.scraper.lists.numbers, e.Mode_Numbers)
+            lbh.printto_lbllist(dictionary.lists.words + dictionary.lists.numbers, lbl_list)
 
-        self.scraper.scrap(self.etr_url.text)
-        dictionary.extend_dictionary(self.scraper.lists.words, e.Mode_Words)
-        dictionary.extend_dictionary(self.scraper.lists.numbers, e.Mode_Numbers)
-        lbh.printto_lbllist(dictionary.lists.words + dictionary.lists.numbers, lbl_list)
+        elif website == e.Facebook_Search:
+            self.get_FB_credentials(dictionary, lbl_list)
+
+        popup.dismiss()
+
+    def scrap_website(self, scraper):
+        pass
+    # ========================== get credentials for Facebook ========================
+
+    def get_FB_credentials(self, dictionary, lbl_list):
+        lay_get_credentials = BoxLayout(orientation='vertical', spacing=15)
+        title = "Your Facebook credentials:"
+        popup = Popup(title=title, content=lay_get_credentials, size=(500, 250), size_hint=(None, None))
+
+        self.inp_fusername = TextInput(text='', size_hint=(1, .1), hint_text='Email', multiline=False)
+        self.inp_fpassword = TextInput(text='', size_hint=(1, .1), hint_text='Password', password=True, multiline=False)
+        btn_submit_creds = Button(text="Start",
+                                  size_hint=(1, .2),
+                                  on_press=partial(self.set_FB_creds_and_scrap, dictionary, lbl_list, popup))
+
+        lay_get_credentials.add_widget(self.inp_fusername)
+        lay_get_credentials.add_widget(self.inp_fpassword)
+        lay_get_credentials.add_widget(btn_submit_creds)
+        popup.open()
+
+    def set_FB_creds_and_scrap(self, dictionary, lbl_list, popup, instance):
+
+        self.fusername = self.inp_fusername.text
+        self.fpassword = self.inp_fpassword.text
+
+        if self.fusername != '' and self.fpassword != '':
+            self.scraper = fs.FacebookScraper(self.fusername, self.fpassword)
+            self.scraper.scrap(self.etr_url.text)
+            dictionary.extend_dictionary(self.scraper.lists.words, e.Mode_Words)
+            dictionary.extend_dictionary(self.scraper.lists.numbers, e.Mode_Numbers)
+            lbh.printto_lbllist(dictionary.lists.words + dictionary.lists.numbers, lbl_list)
         popup.dismiss()
 
     def web_scrap(self, dictionary, lbl_list, text_to_show, website, instance):
@@ -361,10 +349,10 @@ class MyDictionary(App):
 
         lay_web_scrap.add_widget(Label(text=text_to_show, size_hint=(1, .6)))
         self.etr_url = TextInput(text='', size_hint=(1, .2), multiline=False)
-        self.etr_url.bind(on_text_validate=partial(self.scrap_and_add, dictionary, lbl_list, website, popup))
+        self.etr_url.bind(on_text_validate=partial(self.set_scrapers, dictionary, lbl_list, website, popup))
 
         btn_scrap_start = Button(text="Start", size_hint=(1, .2),
-                                 on_press=partial(self.scrap_and_add, dictionary, lbl_list, website, popup))
+                                 on_press=partial(self.set_scrapers, dictionary, lbl_list, website, popup))
 
         lay_web_scrap.add_widget(self.etr_url)
         lay_web_scrap.add_widget(btn_scrap_start)

@@ -1,7 +1,7 @@
 import sys
 import Enums as errors
 from pathlib import Path
-
+import threading
 
 class Search:
 
@@ -11,15 +11,21 @@ class Search:
         self.word = word
         self.file = file
         self.progressbar = progressbar
+        self.res = ''
 
     def search(self):
+        self.progressbar(0)
         if self.word is None:
             self.similar_pass = ""
-            return errors.Error_Empty_Password
+            self.res = errors.Error_Empty_Password
+            self.progressbar(1)
+            return
 
         if self.file == '' or not Path(self.file).is_file():
             self.similar_pass = ""
-            return errors.Error_No_Dictionary
+            self.res = errors.Error_No_Dictionary
+            self.progressbar(1)
+            return
 
         min_mistakes = sys.maxsize
         with open(self.file, 'r') as f:
@@ -29,21 +35,26 @@ class Search:
                 if wordFromFile == self.word:
                     self.similar_pass = wordFromFile
                     self.min_mistakes = 0
-                    self.progressbar(100)
-                    return errors.Password_Found
+                    self.res = errors.Password_Found
+                    self.progressbar(1)
+                    return
 
-                if len(wordFromFile) == len(self.word):                                                         #and self.normalize_input(wordFromFile) == self.normalize_input(word):
+                if len(wordFromFile) == len(self.word):
                     mistakes = self.count_mistakes(wordFromFile, self.word)
                     if min_mistakes > mistakes:
                         min_mistakes = mistakes
                         self.similar_pass = wordFromFile
-            self.progressbar(None)
+                self.progressbar(0)
 
-        if min_mistakes != sys.maxsize:
+        if min_mistakes != sys.maxsize and min_mistakes != len(self.word):
             self.min_mistakes = min_mistakes
-            return errors.Password_Found
+            self.res = errors.Password_Found
+            self.progressbar(1)
+            return
         else:
-            return errors.Password_Not_Found
+            self.res = errors.Password_Not_Found
+            self.progressbar(1)
+            return
 
 
     def count_mistakes(self, word1, word2):

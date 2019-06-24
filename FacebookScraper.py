@@ -28,7 +28,6 @@ class FacebookScraper(ws.Webscraper):
         profile_url = self.clean_url(profile_url)
         self.username = self.get_username(profile_url)
         self.driver.get(profile_url)
-        self.wait_random()
 
         # =============== first and last name ===============
         try:
@@ -44,7 +43,6 @@ class FacebookScraper(ws.Webscraper):
         try:
             self.wait_random()
             self.driver.get(profile_url+'/about?section=overview')
-            self.wait_random()
             dob = self.driver.find_element_by_xpath('//ul[@data-overviewsection="contact_basic"]/li[1]/div/div[2]/span/div[2]').get_attribute(
                 'innerHTML')
             print(dob)
@@ -84,7 +82,6 @@ class FacebookScraper(ws.Webscraper):
         try:
             self.wait_random()
             self.driver.get(profile_url + '/about?section=education')
-            self.wait_random()
             workplaces = self.driver.find_elements_by_xpath('//*[@id="pagelet_eduwork"]/div/div/ul[1]')
             print('wps:', workplaces)
 

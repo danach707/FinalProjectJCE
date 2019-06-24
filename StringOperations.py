@@ -1,6 +1,6 @@
 import re
 import Enums as modes
-
+import zipfile
 
 class Combinations:
     def __init__(self, p_list, wordMaxLen, wordMinLen, filename, progressbar):
@@ -62,6 +62,13 @@ class Combinations:
         # (11): (5) with special characters: (aaabbb@)
         self.concatenate_two_lists_cells(words_with_words, self.p_list.spec_characters)
         self.progressbar()
+
+        self.zipFile()
+        self.progressbar()
+
+    def zipFile(self):
+        zipname = self.filename.split('.')[0]
+        zipfile.ZipFile('%s.zip' % zipname, mode='w').write(self.filename)
         
     def get_special_camel_case(self, word):
         """ receives a word from the dictionary and returns a list containing the word in lowercase, uppercase, and camel case"""
@@ -84,8 +91,6 @@ class Combinations:
     def init_list(self, list):
         rlist = []
         for index in range(len(list)):
-            print(list)
-            print(rlist)
             if self.wordMinLen <= len(list[index]) <= self.wordMaxLen:
                 new_words = self.get_special_camel_case(list[index])
                 rlist.extend(new_words)
@@ -105,7 +110,8 @@ class Combinations:
     
         for index_before_list in range(len(list_before)):
             for index_after_list in range(len(list_after)):
-                new_word = list_before[index_before_list] + list_after[index_after_list]
+                new_word = str(list_before[index_before_list]) + str(list_after[index_after_list])
+
                 if self.wordMinLen <= len(new_word) <= self.wordMaxLen:
                     new_words_camel_case = self.get_special_camel_case(new_word)
                     rlist.append(new_word)
@@ -170,7 +176,7 @@ def clean_data(data):
     data = data.strip()
     data = re.split(r"\n| |,", data)
     # filter none relevant elements:
-    regex = re.compile(r'^[\w]+[A-Za-z0-9|\W]*[\w]+$')
+    regex = re.compile(r'^[A-Za-z0-9]+[\S]*')
     data = list(filter(regex.search, data))
     print("in clean result:", data)
     return data

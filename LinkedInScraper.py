@@ -100,8 +100,10 @@ class LinkedinScraper(ws.Webscraper):
         # =============== Email ===============
         try:
             self.driver.get('https://www.linkedin.com/in/%s/detail/contact-info/' % self.username)
+            self.wait_random()
             email = self.driver.find_element_by_xpath(
                 "//section[contains(@class,'ci-email')]/div/a").get_attribute('innerHTML')
+            print('email:', email)
             email = s.clean_data(email)
             self.lists.words.extend(s.parse_email(''.join(email), e.Mode_Words))
             self.lists.numbers.extend(s.parse_email(''.join(email), e.Mode_Numbers))
@@ -116,7 +118,8 @@ class LinkedinScraper(ws.Webscraper):
             dob = self.driver.find_element_by_xpath(
                 "//section[contains(@class,'ci-birthday')]/div/span").get_attribute('innerHTML')
             dob = s.clean_data(dob)
-            self.lists.numbers.extend(self.handle_dob(dob))
+            dob = self.handle_dob(dob)
+            self.lists.numbers.extend(dob)
         except seleniumExceptions.NoSuchElementException:
             print("No date of birth element in the web page")
         except Exception:
@@ -136,7 +139,7 @@ class LinkedinScraper(ws.Webscraper):
         # ================= address ===================
         try:
             phone = self.driver.find_element_by_xpath(
-                "//section[contains(@class,'ci-address')]/ul/li/span[contains(@class, 't-black']").get_attribute('innerHTML')
+                "//section[contains(@class, 'ci-address')]/div/a").get_attribute('innerHTML')
             phone = s.clean_data(phone)
             self.lists.numbers.extend(phone)
         except seleniumExceptions.NoSuchElementException:
@@ -147,14 +150,20 @@ class LinkedinScraper(ws.Webscraper):
     def handle_dob(self, dob):
         """ the the date of birth in format 'month day' and returns the matching numbers """
         try:
-            month_word = dob[1]
-            day = dob[0]
+            if dob[1].isdigit():
+                day = dob[1]
+                month_word = dob[0]
+            else:
+                day = dob[0]
+                month_word = dob[1]
+
         except IndexError:
             print("Error parsing date of birth")
             return []
 
         for month_num, month in enumerate(e.months, start=1):
             if month == month_word:
+                print('in handle dob', [str(month_num), day])
                 return [str(month_num), day]
         return [day]
 
