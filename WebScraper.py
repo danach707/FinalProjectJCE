@@ -1,6 +1,4 @@
-import os
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from random import randint
 from time import sleep
@@ -17,7 +15,7 @@ class Webscraper:
         self.driver = webdriver.Chrome(executable_path='./driver/chromedriver.exe', options=options)
 
     def wait_random(self):
-        sleep(randint(1, 15))
+        sleep(randint(4, 7))
 
     """ gets the website URL and returns the username """
     def get_username(self, url):

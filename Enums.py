@@ -10,6 +10,8 @@ WORD_MIN_LEN = 6
 LinkedIn_Search = 1
 Facebook_Search = 2
 
+Finish_Progress = -1
+
 months = ['January',
          'February',
          'March',

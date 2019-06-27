@@ -27,8 +27,9 @@ class FacebookScraper(ws.Webscraper):
     def scrap(self, profile_url):
         profile_url = self.clean_url(profile_url)
         self.username = self.get_username(profile_url)
-        self.driver.get(profile_url)
 
+        self.driver.get(profile_url)
+        self.wait_random()
         # =============== first and last name ===============
         try:
             name = self.driver.find_element_by_xpath("//span[@id='fb-timeline-cover-name']/a").get_attribute('innerHTML')
@@ -39,57 +40,74 @@ class FacebookScraper(ws.Webscraper):
         except Exception:
             traceback.print_exc()
 
-        # =============== date of birth ===============
+        # =============== contact basic ==============
+
         try:
+            self.driver.get(profile_url + '/about?section=overview')
             self.wait_random()
-            self.driver.get(profile_url+'/about?section=overview')
-            dob = self.driver.find_element_by_xpath('//ul[@data-overviewsection="contact_basic"]/li[1]/div/div[2]/span/div[2]').get_attribute(
-                'innerHTML')
-            print(dob)
-            dob = s.clean_data(dob)
-            dob = self.get_month_number(dob)
-            if dob is not None:
-                self.lists.numbers.extend(dob)
+            contact_basic = self.driver.find_elements_by_xpath('//ul[@data-overviewsection="contact_basic"]')
+
+            for item in contact_basic:
+                item_name = item.find_element_by_xpath(
+                    "//ul[contains(@data-overviewsection,'contact_basic')]/li/div/div[2]/span/div[1]/span")\
+                    .get_attribute('innerHTML')
+                item_val = item.find_element_by_xpath(
+                    "//ul[contains(@data-overviewsection,'contact_basic')]/li/div/div[2]/span/div[2]")\
+                    .get_attribute('innerHTML')
+
+                print(item_name, item_val)
+                if item_name == 'Phones':
+                    self.handle_phones(item_val)
+                if item_name == 'Birthday':
+                    self.handle_dob(item_val)
+                if item_name == 'Email':
+                    self.handle_email(item_val)
+                if item_name == 'Website':
+                    self.handle_website(item_val)
+
         except seleniumExceptions.NoSuchElementException:
-            print("No date of birth element in the web page")
+            print("No contact basic elements in the web page")
         except Exception:
             traceback.print_exc()
 
         # =============== family members =============== #
 
-            # try:
-            #     self.wait_random()
-            #     self.driver.get(profile_url + '/about?section=all_relationships')
-            #     self.wait_random()
-            #     family_members = self.driver.find_elements_by_xpath('//*[@id="pagelet_eduwork"]/div/div/ul[1]')
-            #     print('fam:', family_members)
-            #
-            #     i = 1
-            #     print(family_members)
-            #     for member in family_members:
-            #         xpath = ".//li[{0}]/div/div/div/div/div[2]/div/a".format(i)
-            #         wp = member.find_element_by_xpath(xpath).get_attribute('innerHTML')
-            #         wp = s.clean_data(wp)
-            #         self.lists.words.extend(wp)
-            #         i += 1
-            #
-            # except seleniumExceptions.NoSuchElementException:
-            #     print("No workplace element in the web page")
-            # except Exception:
-            #     traceback.print_exc()
+        try:
+            self.driver.get(profile_url + '/about?section=relationship')
+            self.wait_random()
+            family_members = self.driver.find_elements_by_xpath('//div[@id="family-relationships-pagelet"]/div/ul')
+
+            i = 1
+            print('len:', str(len(family_members)))
+            for member in family_members:
+                try:
+                    xpath = "//li[{0}]/div/div/div/div/div/div/div/span/a".format(i)
+                    wp = member.find_element_by_xpath(xpath).get_attribute('innerHTML')
+                    print(wp)
+                    wp = s.clean_data(wp)
+                    self.lists.words.extend(wp)
+                except seleniumExceptions.NoSuchElementException:
+                    print('did not find family in %d' % i)
+                    i += 1
+                i += 1
+
+
+        except seleniumExceptions.NoSuchElementException:
+            print("No family elements in the web page")
+        except Exception:
+            traceback.print_exc()
 
         # =============== work places ===============
         try:
             self.wait_random()
             self.driver.get(profile_url + '/about?section=education')
-            workplaces = self.driver.find_elements_by_xpath('//*[@id="pagelet_eduwork"]/div/div/ul[1]')
-            print('wps:', workplaces)
+            workplaces = self.driver.find_elements_by_xpath('//ul[contains(@class,"fbProfileEditExperiences")]')
 
             i = 1
-            print(workplaces)
             for workplace in workplaces:
-                xpath = ".//li[{0}]/div/div/div/div/div[2]/div/a".format(i)
+                xpath = ".//li[contains(@class,'fbEditProfileViewExperience')][{0}]/div/div/div/div/div/div/a".format(i)
                 wp = workplace.find_element_by_xpath(xpath).get_attribute('innerHTML')
+                print(wp)
                 wp = s.clean_data(wp)
                 self.lists.words.extend(wp)
                 i += 1
@@ -99,6 +117,34 @@ class FacebookScraper(ws.Webscraper):
         except Exception:
             traceback.print_exc()
 
+        # quit browser
+        self.wait_random()
+        self.driver.quit()
+
+    # ================ More Functions =================
+
+    def handle_phones(self, phone):
+        phone = s.clean_data(phone)
+        self.lists.numbers.extend(phone)
+
+    def handle_dob(self, dob):
+        dob = s.clean_data(dob)
+        dob = self.get_month_number(dob)
+        if dob is not None:
+            self.lists.numbers.extend(dob)
+
+    def handle_email(self, email):
+        email = s.clean_data(email)
+        self.lists.words.extend(s.parse_email(email[0], e.Mode_Words))
+        self.lists.numbers.extend(s.parse_email(email[0], e.Mode_Numbers))
+
+    def handle_website(self, website):
+        website = s.clean_data(website)
+        # take only the website name without http and suffixes
+        res = website.split('/')
+        res = res[-1]
+        res = res.split['.']
+        self.lists.words.append(res[0])
 
     def clean_url(self, profile_url):
         if profile_url[-1] == '/':
@@ -112,19 +158,3 @@ class FacebookScraper(ws.Webscraper):
             if month == mon:
                 dob[0] = month_num
                 return dob
-
-
-
-if __name__ == '__main__':
-
-    with open('creds.txt', 'r') as cr:
-        email = cr.readline()
-        password = cr.readline()
-
-        scraper = FacebookScraper(email, password)
-        scraper.scrap('https://www.facebook.com/orsolya.magas/')
-        print(scraper.lists.numbers, '\n', scraper.lists.words)
-
-# //*[@id="u_85_0"]/div/div[2]/span/div[2]/span/ul/li hometown
-
-# //*[@id="u_fetchstream_18_b"]/div[2]/ul[@data-overviewsection="contact_basic"]/li[1]/div/div[2]/span/div[2]

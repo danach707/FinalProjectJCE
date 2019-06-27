@@ -1,5 +1,5 @@
 import kivy
-kivy.require('1.9.0')
+kivy.require('1.10.0')
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.uix.button import Button
@@ -15,12 +15,12 @@ import LinkedInScraper as ls
 import FacebookScraper as fs
 import Enums as e
 from kivy.config import Config
+import threading
 
 import Questionnaire_Handler as qh
 import Dictionary_Handler as dh
 import Search_Handler as sh
 import List_Box_Handler as lbh
-import FIleExplorer as fe
 
 images_dir = './Images'
 
@@ -272,7 +272,8 @@ class MyDictionary(App):
 
     def handle_search(self, inp_password, progressbar, pass_result, lbl_search_filename, instance):
         self.searchhandler.set_vars(inp_password, progressbar, pass_result, lbl_search_filename)
-        self.searchhandler.start_search()
+        search_thread = threading.Thread(target=self.searchhandler.start_search)
+        search_thread.start()
 
     def handle_questionnaire(self, dictionary, lbl_list_box, instance):
         self.qhandler.questionnaire(dictionary, lbl_list_box, instance)
@@ -334,8 +335,12 @@ class MyDictionary(App):
         self.fpassword = self.inp_fpassword.text
 
         if self.fusername != '' and self.fpassword != '':
+
+            mutex = threading.Lock()
             self.scraper = fs.FacebookScraper(self.fusername, self.fpassword)
+
             self.scraper.scrap(self.etr_url.text)
+
             dictionary.extend_dictionary(self.scraper.lists.words, e.Mode_Words)
             dictionary.extend_dictionary(self.scraper.lists.numbers, e.Mode_Numbers)
             lbh.printto_lbllist(dictionary.lists.words + dictionary.lists.numbers, lbl_list)

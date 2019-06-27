@@ -1,61 +1,74 @@
-import sys
-import Enums as errors
+import Enums as e
 from pathlib import Path
-import threading
+from itertools import islice
+import ahocorasick
+from collections import Counter
+
 
 class Search:
 
-    def __init__(self, word, file, progressbar):
+    def __init__(self, word, file, progressbar, num_lines_in_file):
         self.similar_pass = ""
         self.min_mistakes = 0
         self.word = word
         self.file = file
         self.progressbar = progressbar
         self.res = ''
+        self.__buffer_size = 131072
+        self.num_lines_in_file = num_lines_in_file
 
     def search(self):
         self.progressbar(0)
         if self.word is None:
             self.similar_pass = ""
-            self.res = errors.Error_Empty_Password
-            self.progressbar(1)
+            self.res = e.Error_Empty_Password
+            self.progressbar(e.Finish_Progress)
             return
 
         if self.file == '' or not Path(self.file).is_file():
             self.similar_pass = ""
-            self.res = errors.Error_No_Dictionary
-            self.progressbar(1)
+            self.res = e.Error_No_Dictionary
+            self.progressbar(e.Finish_Progress)
             return
 
-        min_mistakes = sys.maxsize
-        with open(self.file, 'r') as f:
-            for wordFromFile in f.readlines():
-                wordFromFile = wordFromFile.rstrip()
+        self.min_mistakes = len(self.word)
+        A = ahocorasick.Automaton()
+        already_read = 0
 
-                if wordFromFile == self.word:
-                    self.similar_pass = wordFromFile
+        print(self.num_lines_in_file)
+        with open(self.file, 'r') as f:
+
+            while already_read < self.num_lines_in_file:
+                buffer = list(islice(f, self.__buffer_size))
+
+                for idx, key in enumerate(buffer):
+                    key = key.rstrip()
+                    A.add_word(key, (idx, key))
+
+                self.progressbar(self.__buffer_size)
+                if self.word in A:
+                    self.similar_pass = self.word
                     self.min_mistakes = 0
-                    self.res = errors.Password_Found
-                    self.progressbar(1)
+                    self.res = e.Password_Found
+                    self.progressbar(e.Finish_Progress)
                     return
 
-                if len(wordFromFile) == len(self.word):
-                    mistakes = self.count_mistakes(wordFromFile, self.word)
-                    if min_mistakes > mistakes:
-                        min_mistakes = mistakes
-                        self.similar_pass = wordFromFile
-                self.progressbar(0)
+                # check closeness to word:
+                word_close_val = Counter(self.word) - Counter(key)
+                distance = sum(word_close_val.values())
+                if distance < self.min_mistakes:
+                    self.min_mistakes = distance
+                    self.similar_pass = key
 
-        if min_mistakes != sys.maxsize and min_mistakes != len(self.word):
-            self.min_mistakes = min_mistakes
-            self.res = errors.Password_Found
-            self.progressbar(1)
-            return
+                already_read += self.__buffer_size
+
+        if self.min_mistakes < len(self.word):
+            self.res = e.Password_Found
+            self.progressbar(e.Finish_Progress)
         else:
-            self.res = errors.Password_Not_Found
-            self.progressbar(1)
-            return
-
+            self.res = e.Password_Not_Found
+            self.progressbar(e.Finish_Progress)
+        print('finished')
 
     def count_mistakes(self, word1, word2):
         mistakes = 0

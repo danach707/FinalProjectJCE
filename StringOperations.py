@@ -176,7 +176,7 @@ def clean_data(data):
     data = data.strip()
     data = re.split(r"\n| |,", data)
     # filter none relevant elements:
-    regex = re.compile(r'^[A-Za-z0-9]+[\S]*')
+    regex = re.compile(r'^[\w]+$')
     data = list(filter(regex.search, data))
     print("in clean result:", data)
     return data
