@@ -1,5 +1,5 @@
 
-# Personal Password Dictionary 
+# MyDictionary - Personal Password Dictionary 
 
 ## Details
 This final project is developed as part of the requirements for a Azrieli - Jerusalem College of Engineering at the Software Engineering Department.
