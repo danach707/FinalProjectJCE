@@ -45,24 +45,27 @@ class FacebookScraper(ws.Webscraper):
         try:
             self.driver.get(profile_url + '/about?section=overview')
             self.wait_random()
-            contact_basic = self.driver.find_elements_by_xpath('//ul[@data-overviewsection="contact_basic"]')
+            contact_basic = self.driver\
+                .find_elements_by_xpath('//ul[@data-overviewsection="contact_basic"]/li/div/div[2]/span')
 
             for item in contact_basic:
-                item_name = item.find_element_by_xpath(
-                    "//ul[contains(@data-overviewsection,'contact_basic')]/li/div/div[2]/span/div[1]/span")\
-                    .get_attribute('innerHTML')
-                item_val = item.find_element_by_xpath(
-                    "//ul[contains(@data-overviewsection,'contact_basic')]/li/div/div[2]/span/div[2]")\
-                    .get_attribute('innerHTML')
+                item_name = item.find_element_by_xpath("./div[1]/span").get_attribute('innerHTML')
 
-                print(item_name, item_val)
-                if item_name == 'Phones':
+                if 'Phones' in item_name:
+                    item_val = item.find_element_by_xpath("./div[2]/span").get_attribute('innerHTML')
+                    print('found:', item_val)
                     self.handle_phones(item_val)
-                if item_name == 'Birthday':
+                if 'Birthday' in item_name:
+                    item_val = item.find_element_by_xpath("./div[2]").get_attribute('innerHTML')
+                    print('found:', item_val)
                     self.handle_dob(item_val)
-                if item_name == 'Email':
+                if 'Email' in item_name:
+                    item_val = item.find_element_by_xpath("./div[2]/a").get_attribute('innerHTML')
+                    print('found:', item_val)
                     self.handle_email(item_val)
-                if item_name == 'Website':
+                if 'Website' in item_name:
+                    item_val = item.find_element_by_xpath("./div[2]/a").get_attribute('innerHTML')
+                    print('found:', item_val)
                     self.handle_website(item_val)
 
         except seleniumExceptions.NoSuchElementException:
@@ -75,14 +78,13 @@ class FacebookScraper(ws.Webscraper):
         try:
             self.driver.get(profile_url + '/about?section=relationship')
             self.wait_random()
-            family_members = self.driver.find_elements_by_xpath('//div[@id="family-relationships-pagelet"]/div/ul')
+            family_members = self.driver.find_elements_by_xpath(
+                '//div[@id="family-relationships-pagelet"]/div/ul/li//div/div/div/div/div/div/div/span/a')
 
             i = 1
-            print('len:', str(len(family_members)))
             for member in family_members:
                 try:
-                    xpath = "//li[{0}]/div/div/div/div/div/div/div/span/a".format(i)
-                    wp = member.find_element_by_xpath(xpath).get_attribute('innerHTML')
+                    wp = member.get_attribute('innerHTML')
                     print(wp)
                     wp = s.clean_data(wp)
                     self.lists.words.extend(wp)
@@ -90,7 +92,6 @@ class FacebookScraper(ws.Webscraper):
                     print('did not find family in %d' % i)
                     i += 1
                 i += 1
-
 
         except seleniumExceptions.NoSuchElementException:
             print("No family elements in the web page")
@@ -124,8 +125,8 @@ class FacebookScraper(ws.Webscraper):
     # ================ More Functions =================
 
     def handle_phones(self, phone):
-        phone = s.clean_data(phone)
-        self.lists.numbers.extend(phone)
+        phone = phone.replace('-', '')
+        self.lists.numbers.append(phone)
 
     def handle_dob(self, dob):
         dob = s.clean_data(dob)
@@ -134,16 +135,16 @@ class FacebookScraper(ws.Webscraper):
             self.lists.numbers.extend(dob)
 
     def handle_email(self, email):
-        email = s.clean_data(email)
-        self.lists.words.extend(s.parse_email(email[0], e.Mode_Words))
-        self.lists.numbers.extend(s.parse_email(email[0], e.Mode_Numbers))
+        email = email.strip()
+        self.lists.words.extend(s.parse_email(email, e.Mode_Words))
+        self.lists.numbers.extend(s.parse_email(email, e.Mode_Numbers))
 
     def handle_website(self, website):
-        website = s.clean_data(website)
+        website = website.strip()
         # take only the website name without http and suffixes
         res = website.split('/')
         res = res[-1]
-        res = res.split['.']
+        res = res.split('.')
         self.lists.words.append(res[0])
 
     def clean_url(self, profile_url):

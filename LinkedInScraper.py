@@ -147,6 +147,10 @@ class LinkedinScraper(ws.Webscraper):
         except Exception:
             traceback.print_exc()
 
+        # quit browser
+        self.wait_random()
+        self.driver.quit()
+
     def handle_dob(self, dob):
         """ the the date of birth in format 'month day' and returns the matching numbers """
         try:

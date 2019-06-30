@@ -314,14 +314,15 @@ class MyDictionary(App):
     # ========================== get credentials for Facebook ========================
 
     def get_FB_credentials(self, dictionary, lbl_list):
-        lay_get_credentials = BoxLayout(orientation='vertical', spacing=15)
+        lay_get_credentials = BoxLayout(orientation='vertical', spacing=15, padding=[15, 15])
         title = "Your Facebook credentials:"
         popup = Popup(title=title, content=lay_get_credentials, size=(500, 250), size_hint=(None, None))
 
         self.inp_fusername = TextInput(text='', size_hint=(1, .1), hint_text='Email', multiline=False)
         self.inp_fpassword = TextInput(text='', size_hint=(1, .1), hint_text='Password', password=True, multiline=False)
         btn_submit_creds = Button(text="Start",
-                                  size_hint=(1, .2),
+                                  size_hint=(.5, .1),
+                                  pos_hint={'x': .25},
                                   on_press=partial(self.set_FB_creds_and_scrap, dictionary, lbl_list, popup))
 
         lay_get_credentials.add_widget(self.inp_fusername)
@@ -336,7 +337,6 @@ class MyDictionary(App):
 
         if self.fusername != '' and self.fpassword != '':
 
-            mutex = threading.Lock()
             self.scraper = fs.FacebookScraper(self.fusername, self.fpassword)
 
             self.scraper.scrap(self.etr_url.text)
