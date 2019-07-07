@@ -1,6 +1,6 @@
 import re
 import Enums as modes
-import zipfile
+import itertools
 
 class Combinations:
     def __init__(self, p_list, wordMaxLen, wordMinLen, filename, progressbar):
@@ -63,13 +63,6 @@ class Combinations:
         self.concatenate_two_lists_cells(words_with_words, self.p_list.spec_characters)
         self.progressbar()
 
-        self.zipFile()
-        self.progressbar()
-
-    def zipFile(self):
-        zipname = self.filename.split('.')[0]
-        zipfile.ZipFile('%s.zip' % zipname, mode='w').write(self.filename)
-        
     def get_special_camel_case(self, word):
         """ receives a word from the dictionary and returns a list containing the word in lowercase, uppercase, and camel case"""
         words = []
@@ -102,7 +95,7 @@ class Combinations:
     def concatenate_two_lists_cells(self, list_before, list_after):
         """ gets two lists and concatenate each cell in the list_before to a cell in the list_after.
             the function returns a list of the concatenated words."""
-    
+
         rlist = []
     
         if len(list_before) == 0 or len(list_after) == 0:
@@ -169,7 +162,6 @@ def parse_dob(dob):
     return res
 
 
-
 def clean_data(data):
     """ gets the data and returns a list of the words to the dictionary."""
     # delete new lines and spaces:
@@ -177,7 +169,9 @@ def clean_data(data):
     data = re.split(r"\n| |,", data)
     # filter none relevant elements:
     regex = re.compile(r'^[\w]+$')
+    regex2 = re.compile(r'^(?!(?i)at$|this$|is$|a$|on$|of$|from$|an$|corporation$|school$|area$).*')
     data = list(filter(regex.search, data))
+    data = list(filter(regex2.search, data))
     print("in clean result:", data)
     return data
 

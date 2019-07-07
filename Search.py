@@ -3,9 +3,11 @@ from pathlib import Path
 from itertools import islice
 import ahocorasick
 from collections import Counter
+import sys
 
 
 class Search:
+    """ Search class provide a search engine for the user to search his password and get the best match from the dictionary."""
 
     def __init__(self, word, file, progressbar, num_lines_in_file):
         self.similar_pass = ""
@@ -18,6 +20,8 @@ class Search:
         self.num_lines_in_file = num_lines_in_file
 
     def search(self):
+        """ search methos, gets a word and fine the best match in the dictionary """
+
         self.progressbar(0)
         if self.word is None:
             self.similar_pass = ""
@@ -31,10 +35,10 @@ class Search:
             self.progressbar(e.Finish_Progress)
             return
 
-        self.min_mistakes = len(self.word)
+        self.min_mistakes = sys.maxsize
         A = ahocorasick.Automaton()
         already_read = 0
-
+        similar_passwords = list()
         print(self.num_lines_in_file)
         with open(self.file, 'r') as f:
 
@@ -56,13 +60,18 @@ class Search:
                 # check closeness to word:
                 word_close_val = Counter(self.word) - Counter(key)
                 distance = sum(word_close_val.values())
-                if distance < self.min_mistakes:
+
+                if distance == self.min_mistakes and distance != len(self.word):
+                    similar_passwords.append(key)
+                elif distance < self.min_mistakes:
                     self.min_mistakes = distance
-                    self.similar_pass = key
+                    similar_passwords.clear()
+                    similar_passwords.append(key)
 
                 already_read += self.__buffer_size
 
         if self.min_mistakes < len(self.word):
+            self.similar_pass = self.get_best_match(similar_passwords)
             self.res = e.Password_Found
             self.progressbar(e.Finish_Progress)
         else:
@@ -70,9 +79,32 @@ class Search:
             self.progressbar(e.Finish_Progress)
         print('finished')
 
+    def get_best_match(self, similar_passwords):
+        """ returns the best match from a given list of passwords"""
+        if len(similar_passwords) == 0:
+            return e.Password_Not_Found
+        print(similar_passwords)
+
+        min_mistakes = sys.maxsize
+        similar_pass = similar_passwords[0]
+
+        for password in similar_passwords:
+            mistakes = self.count_mistakes(self.word, password)
+            if mistakes < min_mistakes:
+                min_mistakes = mistakes
+                similar_pass = password
+        return similar_pass
+
     def count_mistakes(self, word1, word2):
+        """ counts the different characters between word1 and word2"""
         mistakes = 0
-        for index in range(len(word1)):
+        if len(word1) > len(word2):
+            lenw = len(word2)
+        else:
+            lenw = len(word1)
+        mistakes += len(word1) - len(word2)
+
+        for index in range(lenw):
             if word1[index] != word2[index]:
                 mistakes = mistakes + 1
         return mistakes
@@ -81,6 +113,7 @@ class Search:
         return self.getchars(word.lower())
 
     def getchars(self, word):
+        """ return the numbers of alpha chars in a given string"""
         chars = ''
         for char in word:
             if char.isalpha():

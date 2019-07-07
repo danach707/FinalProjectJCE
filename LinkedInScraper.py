@@ -104,7 +104,7 @@ class LinkedinScraper(ws.Webscraper):
             email = self.driver.find_element_by_xpath(
                 "//section[contains(@class,'ci-email')]/div/a").get_attribute('innerHTML')
             print('email:', email)
-            email = s.clean_data(email)
+            email = email.strip()
             self.lists.words.extend(s.parse_email(''.join(email), e.Mode_Words))
             self.lists.numbers.extend(s.parse_email(''.join(email), e.Mode_Numbers))
 

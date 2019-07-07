@@ -32,7 +32,7 @@ class DictionaryHandler:
         inp_max_len = TextInput(text='', hint_text='maximum length', size_hint=(1, .4))
         filename = TextInput(text='', hint_text='file name', size_hint=(1, .4))
 
-        self.progressbar = ProgressBar(max=1200, size_hint=(1, .2))
+        self.progressbar = ProgressBar(max=1100, size_hint=(1, .2))
         self.update_bar = Clock.create_trigger(self.update_bar_event)
 
         btn_minmax_submit = Button(text="Submit",
@@ -63,5 +63,5 @@ class DictionaryHandler:
 
     def update_bar_event(self):
         self.progressbar.value += 100
-        if self.progressbar.value == 1200:
+        if self.progressbar.value == 1100:
             self.popup.dismiss()
