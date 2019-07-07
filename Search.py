@@ -48,6 +48,16 @@ class Search:
                 for idx, key in enumerate(buffer):
                     key = key.rstrip()
                     A.add_word(key, (idx, key))
+                    # check closeness to word:
+                    word_close_val = Counter(self.word) - Counter(key)
+                    distance = sum(word_close_val.values())
+
+                    if distance == self.min_mistakes and distance != len(self.word):
+                        similar_passwords.append(key)
+                    elif distance < self.min_mistakes:
+                        self.min_mistakes = distance
+                        similar_passwords.clear()
+                        similar_passwords.append(key)
 
                 self.progressbar(self.__buffer_size)
                 if self.word in A:
@@ -56,17 +66,6 @@ class Search:
                     self.res = e.Password_Found
                     self.progressbar(e.Finish_Progress)
                     return
-
-                # check closeness to word:
-                word_close_val = Counter(self.word) - Counter(key)
-                distance = sum(word_close_val.values())
-
-                if distance == self.min_mistakes and distance != len(self.word):
-                    similar_passwords.append(key)
-                elif distance < self.min_mistakes:
-                    self.min_mistakes = distance
-                    similar_passwords.clear()
-                    similar_passwords.append(key)
 
                 already_read += self.__buffer_size
 

@@ -96,7 +96,7 @@ class Combinations:
         """ gets two lists and concatenate each cell in the list_before to a cell in the list_after.
             the function returns a list of the concatenated words."""
 
-        rlist = []
+        rlist = set()
     
         if len(list_before) == 0 or len(list_after) == 0:
             return rlist
@@ -107,11 +107,11 @@ class Combinations:
 
                 if self.wordMinLen <= len(new_word) <= self.wordMaxLen:
                     new_words_camel_case = self.get_special_camel_case(new_word)
-                    rlist.append(new_word)
-                    rlist.extend(new_words_camel_case)
+                    rlist.add(new_word)
+                    rlist.update(new_words_camel_case)
     
         self.write_words_to_dictionary(rlist)
-        return rlist
+        return list(rlist)
      
     def write_words_to_dictionary(self, words):
         """ writes a list of words to the self.filename specified"""
